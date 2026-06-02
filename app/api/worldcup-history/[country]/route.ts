@@ -211,15 +211,13 @@ export async function GET(
   try {
     const { country } = await params
     const decodedCountry = decodeURIComponent(country)
-    console.log('Fetching World Cup history for:', decodedCountry)
     const countryVariations = getCountryVariations(decodedCountry)
-    console.log('Country variations:', countryVariations)
+    
     
     const history: Array<{ year: number; result: string }> = []
     
     // Use local combined data instead of fetching from GitHub
     const years = Object.keys(wcHistoryData).map(Number).sort()
-    console.log('Available years:', years)
     
     for (const year of years) {
       try {
@@ -253,7 +251,6 @@ export async function GET(
         }
         
         if (participated) {
-          console.log(`${decodedCountry} participated in ${year}: ${result}`)
           history.push({ year, result })
         }
       } catch (error) {
@@ -262,7 +259,6 @@ export async function GET(
       }
     }
     
-    console.log('Final history for', decodedCountry, ':', history)
     return NextResponse.json({ history })
   } catch (error) {
     console.error('Error fetching World Cup history:', error)

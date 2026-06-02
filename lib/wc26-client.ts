@@ -1,6 +1,7 @@
 // WC26 API Client with caching
 
 const CACHE_DURATION = 3600000 // 1 hour in milliseconds
+const STADIUMS_CACHE_DURATION = 172800000 // 48 hours in milliseconds
 
 interface CacheEntry {
   data: any
@@ -9,13 +10,13 @@ interface CacheEntry {
 
 const cache = new Map<string, CacheEntry>()
 
-async function fetchWithCache(url: string, key: string): Promise<any> {
+async function fetchWithCache(url: string, key: string, customCacheDuration?: number): Promise<any> {
   const now = Date.now()
   const cached = cache.get(key)
+  const cacheDuration = customCacheDuration || CACHE_DURATION
   
   // Return cached data if still valid
-  if (cached && now - cached.timestamp < CACHE_DURATION) {
-    console.log(`Returning cached data for ${key}`)
+  if (cached && now - cached.timestamp < cacheDuration) {
     return cached.data
   }
   
@@ -47,7 +48,6 @@ async function fetchWithCache(url: string, key: string): Promise<any> {
     
     // Return cached data even if expired if available
     if (cached) {
-      console.log(`Returning expired cached data for ${key}`)
       return cached.data
     }
     
@@ -60,7 +60,7 @@ export async function getTeams() {
 }
 
 export async function getStadiums() {
-  return fetchWithCache('https://worldcup26.ir/get/stadiums', 'stadiums')
+  return fetchWithCache('https://worldcup26.ir/get/stadiums', 'stadiums', STADIUMS_CACHE_DURATION)
 }
 
 export async function getGames() {

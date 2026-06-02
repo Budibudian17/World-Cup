@@ -199,18 +199,13 @@ export function WorldGlobe() {
     const fetchHistory = async () => {
       setLoadingHistory(true)
       try {
-        console.log('Fetching history for:', selectedMarker.name)
         const response = await fetch(`/api/worldcup-history/${encodeURIComponent(selectedMarker.name)}`)
-        console.log('Response status:', response.status)
         if (response.ok) {
           const data = await response.json()
-          console.log('History data received:', data)
           setWorldCupHistory(data.history || [])
         } else {
-          console.error('Failed to fetch history:', response.statusText)
         }
       } catch (error) {
-        console.error('Error fetching World Cup history:', error)
       } finally {
         setLoadingHistory(false)
       }

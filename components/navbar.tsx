@@ -37,7 +37,7 @@ export function Navbar() {
           <div className="relative">
             {mounted && (
               <img
-                src={theme === 'dark' ? '/img/logoworldcupputih.webp' : '/img/logoworldcuphitam.webp'}
+                src={theme === 'dark' ? '/img/logoworldcupbaru.webp' : '/img/logoworldcupbaru.webp'}
                 alt="World Cup 2026 Logo"
                 className="h-12 w-auto sm:h-14"
               />

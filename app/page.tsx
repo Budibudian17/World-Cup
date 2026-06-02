@@ -13,7 +13,7 @@ import { liveMatches, tournamentStats, teams } from '@/lib/data'
 import topPlayersData from '@/lib/data/wc2026-players.json'
 import { getPlayerPhoto } from '@/lib/player-photos'
 import type { Match, Player } from '@/lib/types'
-import { Trophy, Users, Calendar, MapPin, Globe, Volume2, VolumeX, Twitter, Instagram, Youtube, Facebook } from 'lucide-react'
+import { Trophy, Users, Calendar, MapPin, Globe, Volume2, VolumeX, Twitter, Instagram, Youtube, Facebook, ChevronDown, Coffee } from 'lucide-react'
 
 export default function HomePage() {
   const [isMuted, setIsMuted] = useState(true)
@@ -49,8 +49,6 @@ export default function HomePage() {
               flagMap[team.name_en] = flagUrl
             }
           })
-          console.log('Flag map:', flagMap)
-          console.log('Sample game team names:', data.games[0]?.home_team_name_en, data.games[0]?.away_team_name_en)
           
           // Transform API data to match Match type
           const transformedMatches = data.games
@@ -202,6 +200,11 @@ export default function HomePage() {
             </p>
             <CountdownBlock />
           </div>
+
+          {/* Scroll Indicator */}
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 animate-bounce">
+            <ChevronDown className="w-6 h-6 text-wc-gold/60" />
+          </div>
         </div>
       </section>
 
@@ -337,7 +340,7 @@ export default function HomePage() {
             {/* Left: Logo */}
             <div className="flex flex-col items-center md:items-start">
               <img 
-                src="/img/logoworldcupputih.webp" 
+                src="/img/logoworldcupbaru.webp" 
                 alt="FIFA World Cup 2026"
                 className="h-16 w-auto mb-4"
               />
@@ -384,36 +387,29 @@ export default function HomePage() {
             {/* Right: Social Media */}
             <div className="flex flex-col items-center md:items-end">
               <h4 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg uppercase tracking-wide text-foreground mb-4">
-                Follow Us
+                Follow & SUPPORT ME
               </h4>
               <div className="flex gap-4">
                 <a 
-                  href="#" 
+                  href="https://saweria.co/NgideInteractive" 
                   className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
-                  aria-label="Twitter"
+                  aria-label="Saweria"
                 >
-                  <Twitter className="w-5 h-5" />
+                  <Coffee className="w-5 h-5" />
                 </a>
                 <a 
-                  href="#" 
+                  href="https://www.instagram.com/hilmifarrelfirjatullah/" 
                   className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
                   aria-label="Instagram"
                 >
                   <Instagram className="w-5 h-5" />
                 </a>
                 <a 
-                  href="#" 
+                  href="https://www.youtube.com/@budibudian17" 
                   className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
                   aria-label="YouTube"
                 >
                   <Youtube className="w-5 h-5" />
-                </a>
-                <a 
-                  href="#" 
-                  className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
-                  aria-label="Facebook"
-                >
-                  <Facebook className="w-5 h-5" />
                 </a>
               </div>
             </div>

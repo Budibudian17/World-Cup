@@ -142,16 +142,14 @@ export default function BracketPage() {
       <div className="min-h-screen py-12 md:py-20">
         <div className="w-full px-4 md:px-8">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-            <div>
-              <SectionTag>Knockout Stage</SectionTag>
-              <h1 className="mt-4 font-[family-name:var(--font-barlow-condensed)] font-black text-3xl sm:text-4xl md:text-5xl uppercase tracking-tight text-foreground">
-                Bracket
-              </h1>
-              <p className="mt-2 font-sans text-muted-foreground">
-                Road to the World Cup 2026 Final
-              </p>
-            </div>
+          <div className="text-center mb-8">
+            <SectionTag>Knockout Stage</SectionTag>
+            <h1 className="mt-4 font-[family-name:var(--font-barlow-condensed)] font-black text-3xl sm:text-4xl md:text-5xl uppercase tracking-tight text-foreground">
+              Bracket
+            </h1>
+            <p className="mt-2 font-sans text-muted-foreground">
+              Road to the World Cup 2026 Final
+            </p>
           </div>
 
           {/* Bracket Display */}

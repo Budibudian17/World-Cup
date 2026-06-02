@@ -3,14 +3,26 @@
 import { useState, useEffect, useCallback } from 'react'
 import { PageTransition } from '@/components/page-transition'
 import { SectionTag } from '@/components/section-tag'
-import { quizQuestions } from '@/lib/data'
+import quizData from '@/lib/data/quiz-worldcup.json'
 import { cn } from '@/lib/utils'
 import { CheckCircle, XCircle, Share2, RotateCcw, Trophy } from 'lucide-react'
 
 const QUESTION_TIME = 15 // seconds per question
 
+type Difficulty = 'easy' | 'medium' | 'hard' | 'expert'
+
+interface QuizQuestion {
+  id: number
+  question: string
+  options: string[]
+  answer: string
+  difficulty: Difficulty
+}
+
 export default function QuizPage() {
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'finished'>('idle')
+  const [gameState, setGameState] = useState<'idle' | 'selecting' | 'playing' | 'finished'>('idle')
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty | null>(null)
+  const [filteredQuestions, setFilteredQuestions] = useState<QuizQuestion[]>([])
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [score, setScore] = useState(0)
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
@@ -18,7 +30,7 @@ export default function QuizPage() {
   const [showFeedback, setShowFeedback] = useState(false)
   const [answers, setAnswers] = useState<(boolean | null)[]>([])
 
-  const question = quizQuestions[currentQuestion]
+  const question = filteredQuestions[currentQuestion]
 
   const handleTimeout = useCallback(() => {
     if (!showFeedback) {
@@ -44,7 +56,13 @@ export default function QuizPage() {
     return () => clearInterval(timer)
   }, [gameState, showFeedback, handleTimeout])
 
-  const startGame = () => {
+  const selectDifficulty = (difficulty: Difficulty) => {
+    setSelectedDifficulty(difficulty)
+    const allQuestions = (quizData as QuizQuestion[]).filter(q => q.difficulty === difficulty)
+    // Randomly select 10 questions
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5)
+    const selected = shuffled.slice(0, 10)
+    setFilteredQuestions(selected)
     setGameState('playing')
     setCurrentQuestion(0)
     setScore(0)
@@ -54,13 +72,18 @@ export default function QuizPage() {
     setAnswers([])
   }
 
+  const startGame = () => {
+    setGameState('selecting')
+  }
+
   const handleAnswer = (answerIndex: number) => {
     if (showFeedback) return
 
     setSelectedAnswer(answerIndex)
     setShowFeedback(true)
 
-    const isCorrect = answerIndex === question.correctAnswer
+    const correctAnswerIndex = question.options.indexOf(question.answer)
+    const isCorrect = answerIndex === correctAnswerIndex
     if (isCorrect) {
       setScore((prev) => prev + 1)
     }
@@ -70,7 +93,7 @@ export default function QuizPage() {
   }
 
   const moveToNext = () => {
-    if (currentQuestion < quizQuestions.length - 1) {
+    if (currentQuestion < filteredQuestions.length - 1) {
       setCurrentQuestion((prev) => prev + 1)
       setSelectedAnswer(null)
       setTimeLeft(QUESTION_TIME)
@@ -87,7 +110,7 @@ export default function QuizPage() {
   }
 
   const shareResult = async () => {
-    const text = `I scored ${score}/${quizQuestions.length} on the FIFA World Cup 2026 Quiz! Can you beat my score?`
+    const text = `I scored ${score}/${filteredQuestions.length} on the FIFA World Cup 2026 Quiz (${selectedDifficulty} difficulty)! Can you beat my score?`
     
     if (navigator.share) {
       try {
@@ -100,6 +123,13 @@ export default function QuizPage() {
       alert('Result copied to clipboard!')
     }
   }
+
+  const difficulties: { value: Difficulty; label: string; color: string }[] = [
+    { value: 'easy', label: 'Easy', color: 'bg-green-500' },
+    { value: 'medium', label: 'Medium', color: 'bg-yellow-500' },
+    { value: 'hard', label: 'Hard', color: 'bg-orange-500' },
+    { value: 'expert', label: 'Expert', color: 'bg-red-500' },
+  ]
 
   return (
     <PageTransition>
@@ -121,7 +151,7 @@ export default function QuizPage() {
                 Ready to Play?
               </h2>
               <p className="font-sans text-muted-foreground mb-6">
-                Answer {quizQuestions.length} questions about the FIFA World Cup 2026. You have {QUESTION_TIME} seconds per question.
+                Test your FIFA World Cup knowledge with 100 questions across different difficulty levels. Each session features 10 random questions. You have {QUESTION_TIME} seconds per question.
               </p>
               <button
                 onClick={startGame}
@@ -132,16 +162,50 @@ export default function QuizPage() {
             </div>
           )}
 
+          {gameState === 'selecting' && (
+            <div className="bg-card border border-border rounded-xl p-8 text-center">
+              <h2 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-2xl uppercase text-foreground mb-6">
+                Select Difficulty
+              </h2>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {difficulties.map((diff) => (
+                  <button
+                    key={diff.value}
+                    onClick={() => selectDifficulty(diff.value)}
+                    className={`
+                      p-6 rounded-xl border-2 transition-all duration-200
+                      hover:scale-105 active:scale-95
+                      ${diff.color} border-transparent
+                      hover:border-white/20
+                    `}
+                  >
+                    <div className="text-white font-[family-name:var(--font-barlow-condensed)] font-black text-2xl uppercase mb-2">
+                      {diff.label}
+                    </div>
+                    <div className="text-white/80 font-sans text-sm">
+                      {(quizData as QuizQuestion[]).filter(q => q.difficulty === diff.value).length} questions
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {gameState === 'playing' && (
             <div className="space-y-6">
               {/* Progress */}
               <div className="flex items-center justify-between">
                 <span className="font-sans text-sm text-muted-foreground">
-                  Question {currentQuestion + 1} of {quizQuestions.length}
+                  Question {currentQuestion + 1} of {filteredQuestions.length}
                 </span>
-                <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg text-wc-gold">
-                  Score: {score}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-sans text-xs uppercase tracking-wider text-muted-foreground">
+                    {selectedDifficulty}
+                  </span>
+                  <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg text-wc-gold">
+                    Score: {score}
+                  </span>
+                </div>
               </div>
 
               {/* Timer Bar */}
@@ -161,7 +225,8 @@ export default function QuizPage() {
                 <div className="space-y-3">
                   {question.options.map((option, index) => {
                     const isSelected = selectedAnswer === index
-                    const isCorrect = index === question.correctAnswer
+                    const correctAnswerIndex = question.options.indexOf(question.answer)
+                    const isCorrect = index === correctAnswerIndex
                     const showCorrect = showFeedback && isCorrect
                     const showWrong = showFeedback && isSelected && !isCorrect
 
@@ -191,12 +256,12 @@ export default function QuizPage() {
                 {showFeedback && (
                   <div className={cn(
                     'mt-6 p-4 rounded-lg text-center',
-                    selectedAnswer === question.correctAnswer
+                    selectedAnswer === question.options.indexOf(question.answer)
                       ? 'bg-green-500/10 text-green-500'
                       : 'bg-red-500/10 text-red-500'
                   )}>
                     <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg uppercase">
-                      {selectedAnswer === question.correctAnswer ? 'Correct!' : selectedAnswer === null ? 'Time\'s up!' : 'Wrong!'}
+                      {selectedAnswer === question.options.indexOf(question.answer) ? 'Correct!' : selectedAnswer === null ? 'Time\'s up!' : 'Wrong!'}
                     </span>
                   </div>
                 )}
@@ -210,27 +275,27 @@ export default function QuizPage() {
               <div className="mb-8">
                 <Trophy className={cn(
                   'w-20 h-20 mx-auto mb-4',
-                  score >= 4 ? 'text-wc-gold' : score >= 2 ? 'text-gray-400' : 'text-amber-700'
+                  score >= filteredQuestions.length * 0.7 ? 'text-wc-gold' : score >= filteredQuestions.length * 0.5 ? 'text-gray-400' : 'text-amber-700'
                 )} />
                 <h2 className="font-[family-name:var(--font-barlow-condensed)] font-black text-3xl uppercase text-foreground mb-2">
                   Quiz Complete!
                 </h2>
                 <p className="font-[family-name:var(--font-barlow-condensed)] font-black text-5xl text-wc-gold">
-                  {score}/{quizQuestions.length}
+                  {score}/{filteredQuestions.length}
                 </p>
                 <p className="font-sans text-muted-foreground mt-2">
-                  {score === quizQuestions.length
+                  {score === filteredQuestions.length
                     ? 'Perfect score! You\'re a true football expert!'
-                    : score >= 4
+                    : score >= filteredQuestions.length * 0.7
                     ? 'Great job! You know your World Cup facts!'
-                    : score >= 2
+                    : score >= filteredQuestions.length * 0.5
                     ? 'Not bad! Keep learning about WC26!'
                     : 'Keep studying! The World Cup awaits!'}
                 </p>
               </div>
 
               {/* Answer Summary */}
-              <div className="flex justify-center gap-2 mb-8">
+              <div className="flex justify-center gap-2 mb-8 flex-wrap">
                 {answers.map((correct, index) => (
                   <div
                     key={index}
@@ -251,7 +316,13 @@ export default function QuizPage() {
               {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  onClick={startGame}
+                  onClick={() => setGameState('selecting')}
+                  className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-[family-name:var(--font-barlow-condensed)] font-bold uppercase tracking-wider hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2"
+                >
+                  Change Difficulty
+                </button>
+                <button
+                  onClick={() => selectDifficulty(selectedDifficulty!)}
                   className="flex-1 py-3 bg-wc-gold text-wc-black rounded-lg font-[family-name:var(--font-barlow-condensed)] font-bold uppercase tracking-wider hover:bg-wc-gold-light transition-colors flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" />
@@ -262,7 +333,7 @@ export default function QuizPage() {
                   className="flex-1 py-3 bg-secondary text-foreground rounded-lg font-[family-name:var(--font-barlow-condensed)] font-bold uppercase tracking-wider hover:bg-secondary/80 transition-colors flex items-center justify-center gap-2"
                 >
                   <Share2 className="w-4 h-4" />
-                  Share Result
+                  Share
                 </button>
               </div>
             </div>

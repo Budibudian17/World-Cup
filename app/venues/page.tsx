@@ -19,43 +19,31 @@ export default function VenuesPage() {
   useEffect(() => {
     const fetchStadiums = async () => {
       try {
-        const apiKey = process.env.NEXT_PUBLIC_ZAFRONIX_API_KEY
-        if (!apiKey) {
-          console.error('API key not found in environment variables')
-          setLoadingStadiums(false)
-          return
-        }
-
-        const response = await fetch('https://api.zafronix.com/fifa/worldcup/v1/stadiums?tournament=2026', {
-          headers: {
-            'X-API-Key': apiKey,
-          },
-        })
-
+        const response = await fetch('/api/stadiums')
         if (response.ok) {
           const data = await response.json()
           
           // Transform API data to match Venue type
-          const stadiumsData = data.data || []
+          const stadiumsData = data.stadiums || []
           const transformedStadiums = stadiumsData.map((stadium: any) => ({
             id: stadium.id,
-            name: stadium.fifaNames?.['2026'] || stadium.name,
-            city: stadium.city,
-            country: stadium.country,
+            name: stadium.fifa_name || stadium.name_en,
+            city: stadium.city_en,
+            country: stadium.country_en,
             capacity: stadium.capacity,
-            timezone: 'UTC', // Not provided in this API
-            matchesHosted: 0, // Not provided in this API
-            image: '', // Not provided in this API
-            description: `${stadium.name} opened in ${stadium.opened}. ${stadium.notes || ''}`,
+            timezone: 'UTC',
+            matchesHosted: 0,
+            image: '',
+            description: `${stadium.name_en} opened in ${stadium.yearOpened}. ${stadium.address}`,
             imageUrl: null,
-            surfaceType: stadium.isOpenAir ? 'grass' : 'artificial',
-            opened: stadium.opened,
-            elevationM: stadium.elevationM,
+            surfaceType: stadium.surface,
+            opened: stadium.yearOpened,
+            elevationM: 0,
             coordinates: {
-              latitude: stadium.coords?.lat || 0,
-              longitude: stadium.coords?.long || 0,
+              latitude: 0,
+              longitude: 0,
             },
-            historicTournaments: stadium.tournaments,
+            historicTournaments: [],
           }))
           
           setStadiums(transformedStadiums)
@@ -68,7 +56,7 @@ export default function VenuesPage() {
             const imagePromises = transformedStadiums.map(async (stadium: Venue) => {
               try {
                 const query = encodeURIComponent(`${stadium.name} stadium`)
-                const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${query}&client_id=${unsplashKey}&per_page=1`)
+                const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${query}&client_id=${unsplashKey}&per_page=1&orientation=landscape`)
                 if (unsplashResponse.ok) {
                   const unsplashData = await unsplashResponse.json()
                   if (unsplashData.results?.[0]?.urls?.regular) {
@@ -97,15 +85,12 @@ export default function VenuesPage() {
           const flagPromises = Array.from(uniqueCountries).map(async (countryName: unknown) => {
             const name = String(countryName)
             try {
-              const countryResponse = await fetch(`https://api.zafronix.com/fifa/worldcup/v1/teams/${encodeURIComponent(name)}`, {
-                headers: {
-                  'X-API-Key': apiKey,
-                },
-              })
-              if (countryResponse.ok) {
-                const countryData = await countryResponse.json()
-                if (countryData.flag?.flagUrl) {
-                  flagMap[name] = countryData.flag.flagUrl
+              const teamsResponse = await fetch('/api/teams')
+              if (teamsResponse.ok) {
+                const teamsData = await teamsResponse.json()
+                const team = teamsData.teams?.find((t: any) => t.name_en === name)
+                if (team?.flag) {
+                  flagMap[name] = typeof team.flag === 'string' ? team.flag : team.flag?.flagUrl
                 }
               }
             } catch (error) {

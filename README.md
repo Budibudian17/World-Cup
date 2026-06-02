@@ -1,6 +1,6 @@
 # 🏆 FIFA World Cup 2026 Fan Hub
 
-![Cover Image](public/img/coverwebsite.png)
+![Cover Image](public/img/coverwebsitebaru.png)
 
 > A modern, feature-rich web application for the FIFA World Cup 2026, built with Next.js 16, React 19, and Tailwind CSS.
 
@@ -182,7 +182,7 @@ worldcup/
 ├── public/                  # Static assets
 │   ├── fonts/               # Custom fonts
 │   ├── img/                 # Images
-│   │   ├── coverwebsite.png
+│   │   ├── coverwebsitebaru.png
 │   │   ├── logoworldcuphitam.webp
 │   │   └── logoworldcupputih.webp
 │   └── video/               # Video files

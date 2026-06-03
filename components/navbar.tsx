@@ -15,6 +15,8 @@ const navLinks = [
   { href: '/predict', label: 'Predict' },
   { href: '/quiz', label: 'Quiz' },
   { href: '/venues', label: 'Venues' },
+  { href: '/teams', label: 'Teams' },
+  { href: '/history', label: 'History' },
 ]
 
 export function Navbar() {

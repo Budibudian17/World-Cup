@@ -13,7 +13,7 @@ import { liveMatches, tournamentStats, teams } from '@/lib/data'
 import topPlayersData from '@/lib/data/wc2026-players.json'
 import { getPlayerPhoto } from '@/lib/player-photos'
 import type { Match, Player } from '@/lib/types'
-import { Trophy, Users, Calendar, MapPin, Globe, Volume2, VolumeX, Twitter, Instagram, Youtube, Facebook, ChevronDown, Coffee } from 'lucide-react'
+import { Trophy, Users, Calendar, MapPin, Globe, Volume2, VolumeX, ChevronDown, HelpCircle } from 'lucide-react'
 
 export default function HomePage() {
   const [isMuted, setIsMuted] = useState(true)
@@ -65,6 +65,24 @@ export default function HomePage() {
             .map((match: any) => {
               const isLive = match.time_elapsed !== 'notstarted' && match.finished === 'FALSE'
               
+              // Parse date - API returns format like "06/11/2026 18:00"
+              const [datePart, timePart] = match.local_date.split(' ')
+              const [month, day, year] = datePart.split('/')
+              const [hours, minutes] = timePart.split(':')
+              
+              // Create Date object (assuming UTC from API)
+              const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
+              
+              // Convert to user's local timezone
+              const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+              const formattedDate = matchDate.toLocaleDateString('en-CA', { timeZone: userTimezone })
+              const formattedTime = matchDate.toLocaleTimeString('en-US', { 
+                timeZone: userTimezone,
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false 
+              })
+              
               return {
                 id: match.id,
                 teamA: { 
@@ -82,10 +100,11 @@ export default function HomePage() {
                 scoreA: match.home_score ? parseInt(match.home_score) : null,
                 scoreB: match.away_score ? parseInt(match.away_score) : null,
                 venue: stadiumMap[match.stadium_id] || 'TBD',
-                date: match.local_date,
-                time: match.local_date.split(' ')[1] || '00:00',
+                date: formattedDate,
+                time: formattedTime,
                 isLive: isLive,
                 minute: isLive && match.time_elapsed !== 'notstarted' ? parseInt(match.time_elapsed) : 0,
+                finished: match.finished,
                 flagUrlA: flagMap[match.home_team_name_en] || null,
                 flagUrlB: flagMap[match.away_team_name_en] || null,
               }
@@ -253,7 +272,7 @@ export default function HomePage() {
             <div>
               <SectionTag>Match Center</SectionTag>
               <h2 className="mt-3 font-[family-name:var(--font-barlow-condensed)] font-black text-2xl sm:text-3xl md:text-4xl uppercase tracking-tight text-foreground">
-                Latest Matches
+                Upcoming Matches
               </h2>
             </div>
             <Link href="/matches" className="text-sm font-semibold text-wc-gold hover:text-wc-gold/80 transition-colors">
@@ -332,96 +351,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-12 bg-card border-t border-border">
-        <div className="max-w-[1280px] mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Left: Logo */}
-            <div className="flex flex-col items-center md:items-start">
-              <img 
-                src="/img/logoworldcupbaru.webp" 
-                alt="FIFA World Cup 2026"
-                className="h-16 w-auto mb-4"
-              />
-              <p className="font-sans text-sm text-muted-foreground text-center md:text-left">
-                Fan-made World Cup 2026 Hub. Not affiliated with FIFA.,<br />
-                Created by Hilmi Farrel Firjatullah
-              </p>
-            </div>
-
-            {/* Middle: Navigation */}
-            <div className="flex flex-col items-center">
-              <h4 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg uppercase tracking-wide text-foreground mb-4">
-                Navigation
-              </h4>
-              <ul className="space-y-2">
-                <li>
-                  <Link href="/bracket" className="font-sans text-sm text-muted-foreground hover:text-wc-gold transition-colors">
-                    Bracket
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/groups" className="font-sans text-sm text-muted-foreground hover:text-wc-gold transition-colors">
-                    Groups
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/venues" className="font-sans text-sm text-muted-foreground hover:text-wc-gold transition-colors">
-                    Venues
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/predict" className="font-sans text-sm text-muted-foreground hover:text-wc-gold transition-colors">
-                    Predict
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/quiz" className="font-sans text-sm text-muted-foreground hover:text-wc-gold transition-colors">
-                    Quiz
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Right: Social Media */}
-            <div className="flex flex-col items-center md:items-end">
-              <h4 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg uppercase tracking-wide text-foreground mb-4">
-                Follow & SUPPORT ME
-              </h4>
-              <div className="flex gap-4">
-                <a 
-                  href="https://saweria.co/NgideInteractive" 
-                  className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
-                  aria-label="Saweria"
-                >
-                  <Coffee className="w-5 h-5" />
-                </a>
-                <a 
-                  href="https://www.instagram.com/hilmifarrelfirjatullah/" 
-                  className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
-                  aria-label="Instagram"
-                >
-                  <Instagram className="w-5 h-5" />
-                </a>
-                <a 
-                  href="https://www.youtube.com/@budibudian17" 
-                  className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
-                  aria-label="YouTube"
-                >
-                  <Youtube className="w-5 h-5" />
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-border text-center">
-            <p className="font-sans text-xs text-muted-foreground">
-              © 2026 FIFA World Cup Fan Hub | Hilmi Farrel Firjatullah | All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
     </PageTransition>
   )
 }

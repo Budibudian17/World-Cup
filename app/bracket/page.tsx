@@ -49,21 +49,11 @@ export default function BracketPage() {
         if (response.ok) {
           const data = await response.json()
           
-          console.log('All games from API:', data.games)
-          
           // Filter games by bracket types
           const bracketGames = data.games.filter((game: any) => 
             ROUNDS.includes(game.type)
           )
-          
-          console.log('Filtered bracket games:', bracketGames)
-          console.log('Games by type:', {
-            round_of_16: bracketGames.filter((g: any) => g.type === 'round_of_16').length,
-            quarter_final: bracketGames.filter((g: any) => g.type === 'quarter_final').length,
-            semi_final: bracketGames.filter((g: any) => g.type === 'semi_final').length,
-            final: bracketGames.filter((g: any) => g.type === 'final').length,
-          })
-          
+                  
           // Fill in missing matches with placeholders
           const completeGames: BracketGame[] = []
           

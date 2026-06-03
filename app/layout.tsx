@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Barlow_Condensed, Noto_Sans } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
+import { Footer } from '@/components/footer'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
@@ -44,6 +45,7 @@ export default function RootLayout({
         >
           <Navbar />
           <main>{children}</main>
+          <Footer />
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

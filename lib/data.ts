@@ -68,13 +68,13 @@ export const liveMatches: Match[] = [
     id: '1',
     teamA: teams[0], // USA
     teamB: teams[1], // Morocco
-    scoreA: 1,
-    scoreB: 1,
+    scoreA: null,
+    scoreB: null,
     venue: 'MetLife Stadium',
     date: '2026-06-11',
     time: '18:00',
-    isLive: true,
-    minute: 67,
+    isLive: false,
+    minute: 0,
   },
   {
     id: '2',

@@ -1,5 +1,5 @@
 import type { Match } from '@/lib/types'
-import { MapPin, Clock } from 'lucide-react'
+import { MapPin, HelpCircle } from 'lucide-react'
 
 interface MatchCardProps {
   match: Match
@@ -7,7 +7,7 @@ interface MatchCardProps {
 
 export function MatchCard({ match }: MatchCardProps) {
   return (
-    <div className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group">
+    <div className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group min-w-[550px]">
       {/* Live badge */}
       {match.isLive && (
         <div className="flex items-center gap-1.5 mb-3">
@@ -28,6 +28,8 @@ export function MatchCard({ match }: MatchCardProps) {
               alt={match.teamA.name}
               className="w-8 h-6 object-cover rounded"
             />
+          ) : match.teamA.flag === '🏳️' ? (
+            <HelpCircle className="w-8 h-6 text-muted-foreground" />
           ) : (
             <span className="text-2xl">{match.teamA.flag}</span>
           )}
@@ -37,22 +39,27 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         {/* Score */}
-        <div className="flex items-center gap-2">
-          {match.scoreA !== null && match.scoreB !== null ? (
-            <>
-              <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl text-foreground bg-secondary px-3 py-1 rounded">
-                {match.scoreA}
+        <div className="flex flex-col items-center gap-1">
+          <div className="flex items-center gap-2">
+            {match.scoreA !== null && match.scoreB !== null ? (
+              <>
+                <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl text-foreground bg-secondary px-3 py-1 rounded">
+                  {match.scoreA}
+                </span>
+                <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-muted-foreground">-</span>
+                <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl text-foreground bg-secondary px-3 py-1 rounded">
+                  {match.scoreB}
+                </span>
+              </>
+            ) : (
+              <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg text-wc-gold">
+                -
               </span>
-              <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-muted-foreground">-</span>
-              <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl text-foreground bg-secondary px-3 py-1 rounded">
-                {match.scoreB}
-              </span>
-            </>
-          ) : (
-            <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg text-wc-gold">
-              -
-            </span>
-          )}
+            )}
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {match.date} | {match.time}
+          </span>
         </div>
 
         {/* Team B */}
@@ -66,6 +73,8 @@ export function MatchCard({ match }: MatchCardProps) {
               alt={match.teamB.name}
               className="w-8 h-6 object-cover rounded"
             />
+          ) : match.teamB.flag === '🏳️' ? (
+            <HelpCircle className="w-8 h-6 text-muted-foreground" />
           ) : (
             <span className="text-2xl">{match.teamB.flag}</span>
           )}
@@ -79,14 +88,13 @@ export function MatchCard({ match }: MatchCardProps) {
           <span className="text-xs">{match.venue}</span>
         </div>
         <div className="flex items-center gap-1.5 text-muted-foreground">
-          {match.scoreA !== null && match.scoreB !== null ? (
+          {match.isLive ? (
+            <span className="text-xs text-wc-live-red font-bold">Live {match.minute}'</span>
+          ) : match.finished === 'TRUE' ? (
             <span className="text-xs">Finished</span>
-          ) : !match.isLive ? (
-            <>
-              <Clock className="w-3 h-3" />
-              <span className="text-xs">{match.time}</span>
-            </>
-          ) : null}
+          ) : (
+            <span className="text-xs">Not Played</span>
+          )}
         </div>
       </div>
     </div>

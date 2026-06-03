@@ -34,7 +34,7 @@ export default function VenuesPage() {
             timezone: 'UTC',
             matchesHosted: 0,
             image: '',
-            description: `${stadium.name_en} opened in ${stadium.yearOpened}. ${stadium.address}`,
+            description: `${stadium.name_en || stadium.fifa_name || 'Stadium'}${stadium.yearOpened ? ` opened in ${stadium.yearOpened}` : ''}${stadium.address ? `. Located at ${stadium.address}` : ''}.`,
             imageUrl: null,
             surfaceType: stadium.surface,
             opened: stadium.yearOpened,

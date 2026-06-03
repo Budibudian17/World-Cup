@@ -179,7 +179,7 @@ export default function QuizPage() {
                       hover:border-white/20
                     `}
                   >
-                    <div className="text-white font-(family-name:--font-barlow-condensed) font-black text-2xl uppercase mb-2">
+                    <div className="text-white font-[family-name:var(--font-barlow-condensed)] font-black text-2xl uppercase mb-2">
                       {diff.label}
                     </div>
                     <div className="text-white/80 font-sans text-sm">

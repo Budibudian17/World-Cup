@@ -63,6 +63,7 @@
     "tailwindcss-animate": "^1.0.7",
     "transfermarkt-parser": "^0.1.1",
     "vaul": "^1.1.2",
+    "world-cup-history": "^2.0.13",
     "zod": "^3.24.1"
   },
   "devDependencies": {

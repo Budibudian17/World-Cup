@@ -16,6 +16,8 @@ export interface Match {
   time: string;
   isLive: boolean;
   minute?: number;
+  finished?: string;
+  matchday?: string;
   flagUrlA?: string | null;
   flagUrlB?: string | null;
 }

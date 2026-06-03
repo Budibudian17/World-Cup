@@ -166,7 +166,7 @@ export default function MatchesPage() {
                       <div className="flex items-center gap-4 mb-6">
                         <div className="h-px flex-1 bg-border" />
                         <h2 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-2xl uppercase tracking-wide text-foreground">
-                          Matchday {matchday}
+                          {matchday}
                         </h2>
                         <div className="h-px flex-1 bg-border" />
                       </div>

@@ -7,7 +7,7 @@ interface MatchCardProps {
 
 export function MatchCard({ match }: MatchCardProps) {
   return (
-    <div className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group min-w-[550px]">
+    <div className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group min-w-[320px]">
       {/* Live badge */}
       {match.isLive && (
         <div className="flex items-center gap-1.5 mb-3">

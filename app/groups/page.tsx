@@ -27,7 +27,7 @@ export default function GroupsPage() {
             standings: group.teams.map((team: any) => ({
               team: {
                 name: team.team_name,
-                code: team.team_name?.substring(0, 3).toUpperCase() || 'TBD',
+                code: team.team_name?.substring(0, 3).toUpperCase() || 'TBA',
                 flag: team.flag || '🏳️',
                 group: group.name
               },

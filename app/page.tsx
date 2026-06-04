@@ -30,7 +30,7 @@ export default function HomePage() {
         if (response.ok) {
           const data = await response.json()
           
-          // Fetch stadiums to get stadium names
+          // nge Fetch stadium biar dapet nama stadiumnya
           const stadiumsResponse = await fetch('/api/stadiums')
           const stadiumsData = stadiumsResponse.ok ? await stadiumsResponse.json() : { stadiums: [] }
           const stadiumMap: Record<string, string> = {}
@@ -38,7 +38,7 @@ export default function HomePage() {
             stadiumMap[stadium.id] = stadium.name_en
           })
           
-          // Fetch teams to get flag URLs
+          // nge Fetch teams biar dapet flag URL-nya
           const teamsResponse = await fetch('/api/teams')
           const teamsData = teamsResponse.ok ? await teamsResponse.json() : { teams: [] }
           const flagMap: Record<string, string> = {}
@@ -50,11 +50,11 @@ export default function HomePage() {
             }
           })
           
-          // Transform API data to match Match type
+          // nge Transform API data biar match sama Match type
           const transformedMatches = data.games
-            .filter((match: any) => match.home_team_name_en !== 'TBD' && match.away_team_name_en !== 'TBD')
+            .filter((match: any) => match.home_team_name_en !== 'TBA' && match.away_team_name_en !== 'TBA')
             .sort((a: any, b: any) => {
-              // Sort by date, with live matches first
+              // Diatur dari tanggal, yang mana yang duluan
               const aIsLive = a.time_elapsed !== 'notstarted' && a.finished === 'FALSE'
               const bIsLive = b.time_elapsed !== 'notstarted' && b.finished === 'FALSE'
               if (aIsLive && !bIsLive) return -1
@@ -65,15 +65,15 @@ export default function HomePage() {
             .map((match: any) => {
               const isLive = match.time_elapsed !== 'notstarted' && match.finished === 'FALSE'
               
-              // Parse date - API returns format like "06/11/2026 18:00"
+              // ngubah format tanggal jadi biar seperti biasa
               const [datePart, timePart] = match.local_date.split(' ')
               const [month, day, year] = datePart.split('/')
               const [hours, minutes] = timePart.split(':')
               
-              // Create Date object (assuming UTC from API)
+              // Create Date object (asumsi UTC dari API)
               const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
               
-              // Convert to user's local timezone
+              // Diubah otomatis ke daerah manapun user berada
               const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
               const formattedDate = matchDate.toLocaleDateString('en-CA', { timeZone: userTimezone })
               const formattedTime = matchDate.toLocaleTimeString('en-US', { 
@@ -87,19 +87,19 @@ export default function HomePage() {
                 id: match.id,
                 teamA: { 
                   name: match.home_team_name_en, 
-                  code: match.home_team_name_en?.substring(0, 3).toUpperCase() || 'TBD', 
+                  code: match.home_team_name_en?.substring(0, 3).toUpperCase() || 'TBA', 
                   flag: '🏳️', 
                   group: match.group || '' 
                 },
                 teamB: { 
                   name: match.away_team_name_en, 
-                  code: match.away_team_name_en?.substring(0, 3).toUpperCase() || 'TBD', 
+                  code: match.away_team_name_en?.substring(0, 3).toUpperCase() || 'TBA', 
                   flag: '🏳️', 
                   group: match.group || '' 
                 },
                 scoreA: match.home_score ? parseInt(match.home_score) : null,
                 scoreB: match.away_score ? parseInt(match.away_score) : null,
-                venue: stadiumMap[match.stadium_id] || 'TBD',
+                venue: stadiumMap[match.stadium_id] || 'TBA',
                 date: formattedDate,
                 time: formattedTime,
                 isLive: isLive,
@@ -121,7 +121,7 @@ export default function HomePage() {
 
     const fetchPlayers = async () => {
       try {
-        // Use static JSON data for top players
+        // Buat top player pake JSON static aja
         const transformedPlayers = topPlayersData.topPlayers.map((player: any) => ({
           id: player.id,
           name: player.name,
@@ -140,7 +140,7 @@ export default function HomePage() {
         }))
         setPlayers(transformedPlayers)
 
-        // Fetch player photos from Wikipedia
+        // Ambil foto player dari Wikipedia
         const photoPromises = transformedPlayers.map(async (player) => {
           const photo = await getPlayerPhoto(player.name)
           return { name: player.name, photo }

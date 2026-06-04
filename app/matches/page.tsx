@@ -41,7 +41,7 @@ export default function MatchesPage() {
 
           // Transform API data to match Match type
           const transformedMatches = data.games
-            .filter((match: any) => match.home_team_name_en !== 'TBD' && match.away_team_name_en !== 'TBD')
+            .filter((match: any) => match.home_team_name_en !== 'TBA' && match.away_team_name_en !== 'TBA')
             .map((match: any) => {
               const isLive = match.time_elapsed !== 'notstarted' && match.finished === 'FALSE'
               
@@ -67,19 +67,19 @@ export default function MatchesPage() {
                 id: match.id,
                 teamA: { 
                   name: match.home_team_name_en, 
-                  code: match.home_team_name_en?.substring(0, 3).toUpperCase() || 'TBD', 
+                  code: match.home_team_name_en?.substring(0, 3).toUpperCase() || 'TBA', 
                   flag: '🏳️', 
                   group: match.group || '' 
                 },
                 teamB: { 
                   name: match.away_team_name_en, 
-                  code: match.away_team_name_en?.substring(0, 3).toUpperCase() || 'TBD', 
+                  code: match.away_team_name_en?.substring(0, 3).toUpperCase() || 'TBA', 
                   flag: '🏳️', 
                   group: match.group || '' 
                 },
                 scoreA: match.home_score ? parseInt(match.home_score) : null,
                 scoreB: match.away_score ? parseInt(match.away_score) : null,
-                venue: stadiumMap[match.stadium_id] || 'TBD',
+                venue: stadiumMap[match.stadium_id] || 'TBA',
                 date: formattedDate,
                 time: formattedTime,
                 isLive: isLive,

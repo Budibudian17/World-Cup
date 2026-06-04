@@ -72,11 +72,11 @@ export default function BracketPage() {
                   id: `${round}-placeholder-${i}`,
                   home_team_id: null,
                   away_team_id: null,
-                  home_team_name_en: 'TBD',
-                  away_team_name_en: 'TBD',
+                  home_team_name_en: 'TBA',
+                  away_team_name_en: 'TBA',
                   home_score: null,
                   away_score: null,
-                  local_date: 'TBD',
+                  local_date: 'TBA',
                   type: round,
                   stadium_id: '',
                   finished: 'FALSE',
@@ -160,7 +160,7 @@ export default function BracketPage() {
                 </span>
                 <div className="flex flex-col items-center gap-4 p-6 bg-card border-2 border-wc-gold rounded-xl">
                   <Trophy className="w-12 h-12 text-wc-gold" />
-                  <span className="font-sans text-sm text-muted-foreground">TBD</span>
+                  <span className="font-sans text-sm text-muted-foreground">TBA</span>
                 </div>
               </div>
             </div>
@@ -207,8 +207,8 @@ function BracketMatchCard({ game }: { game: BracketGame }) {
     return `${date} ${time}`
   }
 
-  const homeTeam = game.home_team_name_en || 'TBD'
-  const awayTeam = game.away_team_name_en || 'TBD'
+  const homeTeam = game.home_team_name_en || 'TBA'
+  const awayTeam = game.away_team_name_en || 'TBA'
   const homeScore = isFinished && game.home_score !== null ? game.home_score : null
   const awayScore = isFinished && game.away_score !== null ? game.away_score : null
 

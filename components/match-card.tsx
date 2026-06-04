@@ -1,5 +1,6 @@
 import type { Match } from '@/lib/types'
 import { MapPin, HelpCircle } from 'lucide-react'
+import Link from 'next/link'
 
 interface MatchCardProps {
   match: Match
@@ -7,7 +8,8 @@ interface MatchCardProps {
 
 export function MatchCard({ match }: MatchCardProps) {
   return (
-    <div className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group min-w-[320px]">
+    <Link href={`/matches/${match.id}`} className="block">
+      <div className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group min-w-[320px] cursor-pointer">
       {/* Live badge */}
       {match.isLive && (
         <div className="flex items-center gap-1.5 mb-3">
@@ -98,5 +100,6 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
       </div>
     </div>
+    </Link>
   )
 }

@@ -8,7 +8,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching games:', error)
     
-    // Return fallback data if API fails
+    // nge Return data fallback kalo API gagal
     const fallbackData = {
       games: [
         {

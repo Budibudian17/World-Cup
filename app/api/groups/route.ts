@@ -5,11 +5,11 @@ export async function GET() {
   try {
     const groupsData = await getGroups()
     
-    // Fetch teams to get team names and flags
+    // Ambil data team buat dapetin nama dan flag
     const teamsResponse = await fetch('https://worldcup26.ir/get/teams')
     const teamsData = teamsResponse.ok ? await teamsResponse.json() : { teams: [] }
     
-    // Create team map for joining
+    // Buat map team untuk join
     const teamMap: Record<string, { name: string; flag: string }> = {}
     teamsData.teams.forEach((team: any) => {
       if (team.id && team.name_en) {
@@ -20,7 +20,7 @@ export async function GET() {
       }
     })
     
-    // Join groups with team data
+    // nge Join groups dengan team data
     const enrichedGroups = groupsData.groups.map((group: any) => ({
       name: group.name,
       teams: group.teams.map((team: any) => {
@@ -37,7 +37,7 @@ export async function GET() {
   } catch (error) {
     console.error('Error fetching groups:', error)
     
-    // Return fallback data
+    // nge Return data fallback
     const fallbackData = {
       groups: [
         {
@@ -46,7 +46,7 @@ export async function GET() {
             { team_id: '1', team_name: 'Mexico', flag: 'https://flagcdn.com/w80/mx.png', mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
             { team_id: '2', team_name: 'United States', flag: 'https://flagcdn.com/w80/us.png', mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
             { team_id: '3', team_name: 'Canada', flag: 'https://flagcdn.com/w80/ca.png', mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
-            { team_id: '4', team_name: 'TBD', flag: null, mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
+            { team_id: '4', team_name: 'TBA', flag: null, mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
           ]
         },
         {
@@ -54,8 +54,8 @@ export async function GET() {
           teams: [
             { team_id: '5', team_name: 'Spain', flag: 'https://flagcdn.com/w80/es.png', mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
             { team_id: '6', team_name: 'Netherlands', flag: 'https://flagcdn.com/w80/nl.png', mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
-            { team_id: '7', team_name: 'TBD', flag: null, mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
-            { team_id: '8', team_name: 'TBD', flag: null, mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
+            { team_id: '7', team_name: 'TBA', flag: null, mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
+            { team_id: '8', team_name: 'TBA', flag: null, mp: '0', w: '0', d: '0', l: '0', gf: '0', ga: '0', gd: '0', pts: '0' },
           ]
         }
       ]

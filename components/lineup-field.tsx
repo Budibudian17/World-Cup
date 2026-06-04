@@ -1,0 +1,300 @@
+import Image from 'next/image'
+
+interface Player {
+  id: number
+  name: string
+  number: number
+  photo: string
+  pos: string
+}
+
+interface LineupPlayer {
+  player: Player
+  position?: {
+    x: number
+    y: number
+  }
+}
+
+interface TeamLineup {
+  team: {
+    id: number
+    name: string
+    logo: string
+  }
+  coach: {
+    id: number
+    name: string
+    photo: string | null
+  }
+  formation: string
+  startXI: LineupPlayer[]
+  substitutes: LineupPlayer[]
+}
+
+interface LineupFieldProps {
+  homeTeam: TeamLineup
+  awayTeam: TeamLineup
+  betweenFieldAndSubstitutes?: React.ReactNode
+  belowSubstitutes?: React.ReactNode
+  homeFlagUrl?: string | null
+  awayFlagUrl?: string | null
+  homeTeamName?: string
+  awayTeamName?: string
+}
+
+export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, belowSubstitutes, homeFlagUrl, awayFlagUrl, homeTeamName, awayTeamName }: LineupFieldProps) {
+  return (
+    <div className="w-full max-w-6xl mx-auto space-y-6">
+      {/* Team flags above field */}
+      <div className="flex justify-between items-center px-8">
+        <div className="flex items-center gap-4">
+          {homeFlagUrl && (
+            <img 
+              src={homeFlagUrl} 
+              alt={homeTeamName || homeTeam.team.name}
+              className="w-16 h-12 object-contain"
+            />
+          )}
+          <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xl text-foreground">
+            {homeTeamName || homeTeam.team.name}
+          </span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xl text-foreground">
+            {awayTeamName || awayTeam.team.name}
+          </span>
+          {awayFlagUrl && (
+            <img 
+              src={awayFlagUrl} 
+              alt={awayTeamName || awayTeam.team.name}
+              className="w-16 h-12 object-contain"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Single Field with Both Teams */}
+      <div className="relative bg-green-900/30 border-2 border-green-700/50 rounded-lg overflow-hidden">
+        {/* Field markings */}
+        <div className="absolute inset-0">
+          {/* Center line */}
+          <div className="absolute top-0 bottom-0 left-1/2 w-0.5 bg-white/20" />
+          
+          {/* Center circle */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 border-2 border-white/20 rounded-full" />
+          
+          {/* Penalty areas */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-16 h-32 border-2 border-white/20 border-l-0" />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-16 h-32 border-2 border-white/20 border-r-0" />
+          
+          {/* Goal areas */}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-8 h-16 border-2 border-white/20 border-l-0" />
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-16 border-2 border-white/20 border-r-0" />
+        </div>
+
+        {/* Players on field - teams facing each other horizontally (home left, away right) */}
+        <div className="relative h-[400px]">
+          {/* Home team players (left half, facing right) */}
+          {homeTeam.startXI.map((lineupPlayer) => {
+            const position = lineupPlayer.position || { x: 50, y: 50 }
+            // Use positions directly (already set for horizontal field in API)
+            return (
+              <div
+                key={lineupPlayer.player.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer"
+                style={{
+                  left: `${position.x}%`,
+                  top: `${position.y}%`
+                }}
+              >
+                <div className="relative w-12 h-12 mb-1">
+                  {lineupPlayer.player.photo ? (
+                    <Image
+                      src={lineupPlayer.player.photo}
+                      alt={lineupPlayer.player.name}
+                      fill
+                      className="rounded-full object-cover border-2 border-wc-gold"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-wc-gold/20 border-2 border-wc-gold flex items-center justify-center">
+                      <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs text-wc-gold">
+                        {lineupPlayer.player.number}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs text-foreground">
+                    {lineupPlayer.player.number}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate max-w-[80px]">
+                    {lineupPlayer.player.name}
+                  </p>
+                  <p className="text-[10px] text-wc-gold">
+                    {lineupPlayer.player.pos}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+
+          {/* Away team players (right half, facing left) */}
+          {awayTeam.startXI.map((lineupPlayer) => {
+            const position = lineupPlayer.position || { x: 50, y: 50 }
+            // Use positions directly (already set for horizontal field in API)
+            return (
+              <div
+                key={lineupPlayer.player.id}
+                className="absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group cursor-pointer"
+                style={{
+                  left: `${position.x}%`,
+                  top: `${position.y}%`
+                }}
+              >
+                <div className="relative w-12 h-12 mb-1">
+                  {lineupPlayer.player.photo ? (
+                    <Image
+                      src={lineupPlayer.player.photo}
+                      alt={lineupPlayer.player.name}
+                      fill
+                      className="rounded-full object-cover border-2 border-blue-400"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-blue-400/20 border-2 border-blue-400 flex items-center justify-center">
+                      <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs text-blue-400">
+                        {lineupPlayer.player.number}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <p className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs text-foreground">
+                    {lineupPlayer.player.number}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate max-w-[80px]">
+                    {lineupPlayer.player.name}
+                  </p>
+                  <p className="text-[10px] text-blue-400">
+                    {lineupPlayer.player.pos}
+                  </p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Content between field and substitutes */}
+      {betweenFieldAndSubstitutes}
+
+      {/* Substitutes - Side by Side */}
+      <div className="grid grid-cols-2 gap-8">
+        {/* Home Team Substitutes - Bench Style */}
+        <div className="bg-gradient-to-b from-amber-900/20 to-amber-950/30 border-2 border-amber-700/50 rounded-lg p-4 relative overflow-hidden">
+          {/* Bench texture */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="w-full h-full" style={{
+              backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 22px)'
+            }} />
+          </div>
+          <div className="relative">
+            <h4 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-sm uppercase text-amber-200 mb-3">
+              Home Bench
+            </h4>
+          <div className="flex flex-wrap gap-2">
+            {homeTeam.substitutes.map((lineupPlayer) => (
+              <div
+                key={lineupPlayer.player.id}
+                className="flex items-center gap-2 bg-secondary/50 px-3 py-2 rounded-lg group cursor-pointer hover:bg-secondary transition-colors"
+              >
+                <div className="relative w-8 h-8">
+                  {lineupPlayer.player.photo ? (
+                    <Image
+                      src={lineupPlayer.player.photo}
+                      alt={lineupPlayer.player.name}
+                      fill
+                      className="rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-wc-gold/20 border border-wc-gold flex items-center justify-center">
+                      <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-[10px] text-wc-gold">
+                        {lineupPlayer.player.number}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs text-foreground">
+                    {lineupPlayer.player.number}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {lineupPlayer.player.name}
+                  </p>
+                </div>
+                <span className="text-[10px] text-wc-gold ml-1">
+                  {lineupPlayer.player.pos}
+                </span>
+              </div>
+            ))}
+          </div>
+          </div>
+        </div>
+
+        {/* Away Team Substitutes - Bench Style */}
+        <div className="bg-gradient-to-b from-blue-900/20 to-blue-950/30 border-2 border-blue-700/50 rounded-lg p-4 relative overflow-hidden">
+          {/* Bench texture */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="w-full h-full" style={{
+              backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(0,0,0,0.1) 20px, rgba(0,0,0,0.1) 22px)'
+            }} />
+          </div>
+          <div className="relative">
+            <h4 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-sm uppercase text-blue-200 mb-3">
+              Away Bench
+            </h4>
+          <div className="flex flex-wrap gap-2">
+            {awayTeam.substitutes.map((lineupPlayer) => (
+              <div
+                key={lineupPlayer.player.id}
+                className="flex items-center gap-2 bg-secondary/50 px-3 py-2 rounded-lg group cursor-pointer hover:bg-secondary transition-colors"
+              >
+                <div className="relative w-8 h-8">
+                  {lineupPlayer.player.photo ? (
+                    <Image
+                      src={lineupPlayer.player.photo}
+                      alt={lineupPlayer.player.name}
+                      fill
+                      className="rounded-full object-cover border border-border"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-blue-400/20 border border-blue-400 flex items-center justify-center">
+                      <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-[10px] text-blue-400">
+                        {lineupPlayer.player.number}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <p className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs text-foreground">
+                    {lineupPlayer.player.number}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {lineupPlayer.player.name}
+                  </p>
+                </div>
+                <span className="text-[10px] text-blue-400 ml-1">
+                  {lineupPlayer.player.pos}
+                </span>
+              </div>
+            ))}
+          </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Content below substitutes */}
+      {belowSubstitutes}
+    </div>
+  )
+}

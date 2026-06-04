@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
 import { Analytics } from '@vercel/analytics/next'
+import QueryProvider from '@/components/query-provider'
 import './globals.css'
 
 const barlowCondensed = Barlow_Condensed({
@@ -23,9 +24,9 @@ export const metadata: Metadata = {
   description: 'Your ultimate destination for FIFA World Cup 2026. Live scores, brackets, predictions, and more.',
   keywords: 'FIFA, World Cup, 2026, Soccer, Football, USA, Canada, Mexico',
   icons: {
-    icon: '/img/logoworldcupputih.ico',
-    shortcut: '/img/logoworldcupputih.ico',
-    apple: '/img/logoworldcupputih.ico',
+    icon: '/img/logoworldcupbaru.ico',
+    shortcut: '/img/logoworldcupbaru.ico',
+    apple: '/img/logoworldcupbaru.ico',
   },
 }
 
@@ -37,16 +38,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={`${barlowCondensed.variable} ${notoSans.variable}`}>
       <body className="font-sans antialiased bg-background">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+          </ThemeProvider>
+        </QueryProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

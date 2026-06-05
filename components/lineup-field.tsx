@@ -36,37 +36,50 @@ interface LineupFieldProps {
   homeTeam: TeamLineup
   awayTeam: TeamLineup
   betweenFieldAndSubstitutes?: React.ReactNode
-  belowSubstitutes?: React.ReactNode
   homeFlagUrl?: string | null
   awayFlagUrl?: string | null
   homeTeamName?: string
   awayTeamName?: string
 }
 
-export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, belowSubstitutes, homeFlagUrl, awayFlagUrl, homeTeamName, awayTeamName }: LineupFieldProps) {
+export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, homeFlagUrl, awayFlagUrl, homeTeamName, awayTeamName }: LineupFieldProps) {
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       {/* Team flags above field */}
       <div className="flex justify-between items-center px-8">
         <div className="flex items-center gap-4">
           {homeFlagUrl && (
-            <img 
-              src={homeFlagUrl} 
+            <img
+              src={homeFlagUrl}
               alt={homeTeamName || homeTeam.team.name}
               className="w-16 h-12 object-contain"
             />
           )}
-          <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xl text-foreground">
-            {homeTeamName || homeTeam.team.name}
-          </span>
+          <div>
+            <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xl text-foreground">
+              {homeTeamName || homeTeam.team.name}
+            </span>
+            {homeTeam.coach && homeTeam.coach.name && homeTeam.coach.name !== 'TBA Coach' && (
+              <div className="text-xs text-muted-foreground">
+                Coach: {homeTeam.coach.name}
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-4">
-          <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xl text-foreground">
-            {awayTeamName || awayTeam.team.name}
-          </span>
+          <div className="text-right">
+            <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xl text-foreground">
+              {awayTeamName || awayTeam.team.name}
+            </span>
+            {awayTeam.coach && awayTeam.coach.name && awayTeam.coach.name !== 'TBA Coach' && (
+              <div className="text-xs text-muted-foreground">
+                Coach: {awayTeam.coach.name}
+              </div>
+            )}
+          </div>
           {awayFlagUrl && (
-            <img 
-              src={awayFlagUrl} 
+            <img
+              src={awayFlagUrl}
               alt={awayTeamName || awayTeam.team.name}
               className="w-16 h-12 object-contain"
             />
@@ -292,9 +305,6 @@ export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, be
           </div>
         </div>
       </div>
-
-      {/* Content below substitutes */}
-      {belowSubstitutes}
     </div>
   )
 }

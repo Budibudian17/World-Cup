@@ -53,23 +53,16 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Right: Social Media */}
+          {/* Right: Social Media & Support */}
           <div className="flex flex-col items-center md:items-end">
             <h4 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg uppercase tracking-wide text-foreground mb-4">
-              Follow & SUPPORT ME
+              Follow & Support Me
             </h4>
-            <div className="flex gap-4">
-              <a 
-                href="https://saweria.co/NgideInteractive" 
-                className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
-                aria-label="Saweria"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Coffee className="w-5 h-5" />
-              </a>
-              <a 
-                href="https://www.instagram.com/hilmifarrelfirjatullah/" 
+
+            {/* Social Media */}
+            <div className="flex gap-3 mb-4">
+              <a
+                href="https://www.instagram.com/hilmifarrelfirjatullah/"
                 className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
                 aria-label="Instagram"
                 target="_blank"
@@ -77,8 +70,8 @@ export function Footer() {
               >
                 <Instagram className="w-5 h-5" />
               </a>
-              <a 
-                href="https://www.youtube.com/@budibudian17" 
+              <a
+                href="https://www.youtube.com/@budibudian17"
                 className="w-10 h-10 flex items-center justify-center bg-secondary rounded-full hover:bg-wc-gold hover:text-background transition-colors"
                 aria-label="YouTube"
                 target="_blank"
@@ -86,6 +79,47 @@ export function Footer() {
               >
                 <Youtube className="w-5 h-5" />
               </a>
+            </div>
+
+            {/* Payment Methods */}
+            <div className="space-y-2 w-full max-w-xs">
+              <p className="text-xs text-muted-foreground text-center md:text-right">
+                Support via:
+              </p>
+              <div className="flex gap-2 justify-center md:justify-end">
+                {/* PayPal */}
+                <a
+                  href="https://paypal.me/HilmiFarrel?locale.x=id_ID&country.x=ID"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-card border border-border rounded-lg p-2 hover:border-wc-gold transition-colors"
+                  aria-label="PayPal"
+                >
+                  <img
+                    src="/img/paypallogo.webp"
+                    alt="PayPal"
+                    className="w-16 h-6 object-contain"
+                  />
+                </a>
+
+                {/* QRIS / Saweria */}
+                <a
+                  href="https://saweria.co/NgideInteractive"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-card border border-border rounded-lg p-2 hover:border-wc-gold transition-colors"
+                  aria-label="Saweria"
+                >
+                  <img
+                    src="/img/sawerialogo.webp"
+                    alt="Saweria"
+                    className="w-16 h-6 object-contain"
+                  />
+                </a>
+              </div>
+              <p className="text-xs text-muted-foreground text-center md:text-right">
+                Help me unlock the Premium API for zero limits and instant updates !
+              </p>
             </div>
           </div>
         </div>

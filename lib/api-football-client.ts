@@ -134,18 +134,26 @@ export async function getFixturePredictions(fixtureId: string) {
   )
 }
 
+// Search for teams/countries by name
+export async function searchTeams(search: string) {
+  return fetchWithCache(
+    `${API_BASE_URL}/teams?search=${search}`,
+    TEAM_CACHE_DURATION
+  )
+}
+
+// Get all national teams
+export async function getNationalTeams() {
+  return fetchWithCache(
+    `${API_BASE_URL}/teams`,
+    TEAM_CACHE_DURATION
+  )
+}
+
 // Get head-to-head between two teams
 export async function getHeadToHead(team1Id: number, team2Id: number) {
   return fetchWithCache(
     `${API_BASE_URL}/fixtures/headtohead?h2h=${team1Id}-${team2Id}`,
     LINEUP_CACHE_DURATION
-  )
-}
-
-// Get all teams to map team names to IDs
-export async function getTeams() {
-  return fetchWithCache(
-    `${API_BASE_URL}/teams`,
-    TEAM_CACHE_DURATION
   )
 }

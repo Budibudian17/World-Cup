@@ -128,7 +128,7 @@ export default function TeamsPage() {
               48 Teams
             </h1>
             <p className="mt-3 font-sans text-muted-foreground max-w-xl mx-auto">
-              Explore all 48 nations competing in the FIFA World Cup 2026. Click on any team to see their squad.
+              Explore all 48 nations competing in the FIFA World Cup 2026.
             </p>
           </div>
 

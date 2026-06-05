@@ -3,6 +3,7 @@ import { Barlow_Condensed, Noto_Sans } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { Navbar } from '@/components/navbar'
 import { Footer } from '@/components/footer'
+import { SupportModal } from '@/components/support-modal'
 import { Analytics } from '@vercel/analytics/next'
 import QueryProvider from '@/components/query-provider'
 import './globals.css'
@@ -48,6 +49,7 @@ export default function RootLayout({
             <Navbar />
             <main>{children}</main>
             <Footer />
+            <SupportModal />
           </ThemeProvider>
         </QueryProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

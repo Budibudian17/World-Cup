@@ -118,7 +118,7 @@ export function Footer() {
                 </a>
               </div>
               <p className="text-xs text-muted-foreground text-center md:text-right">
-                Help me unlock the Premium API for zero limits and instant updates!
+                Help me unlock the Premium API for zero limits and instant updates !
               </p>
             </div>
           </div>

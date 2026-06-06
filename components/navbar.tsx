@@ -42,6 +42,8 @@ export function Navbar() {
                 src={theme === 'dark' ? '/img/logoworldcupbaru.webp' : '/img/logoworldcupbaru.webp'}
                 alt="World Cup 2026 Logo"
                 className="h-12 w-auto sm:h-14"
+                loading="eager"
+                fetchPriority="high"
               />
             )}
           </div>

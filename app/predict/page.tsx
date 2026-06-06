@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { PageTransition } from '@/components/page-transition'
 import { SectionTag } from '@/components/section-tag'
 import { PredictSelector } from '@/components/predict-selector'
@@ -26,29 +27,27 @@ interface SquadStats {
 }
 
 export default function PredictPage() {
-  const [teams, setTeams] = useState<Team[]>([])
-  const [loadingTeams, setLoadingTeams] = useState(true)
+  // Fetch teams with React Query for caching
+  const { data: teamsData, isLoading: loadingTeams, error: teamsError } = useQuery({
+    queryKey: ['predict-teams'],
+    queryFn: async () => {
+      const teamsList = await getTeamsList()
+      console.log('Teams loaded:', teamsList)
+      return teamsList
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  })
+
+  const teams = teamsData || []
   const [selectedHome, setSelectedHome] = useState<SquadStats | null>(null)
   const [selectedAway, setSelectedAway] = useState<SquadStats | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [cooldown, setCooldown] = useState(false)
-
-  useEffect(() => {
-    async function loadTeams() {
-      try {
-        const teamsList = await getTeamsList()
-        console.log('Teams loaded:', teamsList)
-        setTeams(teamsList)
-      } catch (error) {
-        console.error('Error loading teams:', error)
-        setError('Failed to load teams. Please refresh the page.')
-      } finally {
-        setLoadingTeams(false)
-      }
-    }
-    loadTeams()
-  }, [])
 
   const handlePredict = async (homeTeam: Team, awayTeam: Team) => {
     if (cooldown) return

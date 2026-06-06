@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { PageTransition } from '@/components/page-transition'
 import { SectionTag } from '@/components/section-tag'
 import type { Group, GroupStanding } from '@/lib/types'
@@ -11,48 +12,45 @@ type SortKey = 'points' | 'goalDifference'
 type SortOrder = 'asc' | 'desc'
 
 export default function GroupsPage() {
-  const [groups, setGroups] = useState<Group[]>([])
-  const [loading, setLoading] = useState(true)
+  // Fetch groups with React Query for caching
+  const { data: groupsData, isLoading: loading } = useQuery({
+    queryKey: ['groups'],
+    queryFn: async () => {
+      const response = await fetch('/api/groups')
+      if (!response.ok) throw new Error('Failed to fetch groups')
+      const data = await response.json()
 
-  useEffect(() => {
-    const fetchGroups = async () => {
-      try {
-        const response = await fetch('/api/groups')
-        if (response.ok) {
-          const data = await response.json()
-          
-          // Transform API data to Group interface
-          const transformedGroups = data.groups.map((group: any) => ({
-            name: group.name,
-            standings: group.teams.map((team: any) => ({
-              team: {
-                name: team.team_name,
-                code: team.team_name?.substring(0, 3).toUpperCase() || 'TBA',
-                flag: team.flag || '🏳️',
-                group: group.name
-              },
-              played: parseInt(team.mp) || 0,
-              won: parseInt(team.w) || 0,
-              drawn: parseInt(team.d) || 0,
-              lost: parseInt(team.l) || 0,
-              goalsFor: parseInt(team.gf) || 0,
-              goalsAgainst: parseInt(team.ga) || 0,
-              goalDifference: parseInt(team.gd) || 0,
-              points: parseInt(team.pts) || 0
-            }))
-          })).sort((a: any, b: any) => a.name.localeCompare(b.name))
-          
-          setGroups(transformedGroups)
-        }
-      } catch (error) {
-        console.error('Error fetching groups:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
+      // Transform API data to Group interface
+      const transformedGroups = data.groups.map((group: any) => ({
+        name: group.name,
+        standings: group.teams.map((team: any) => ({
+          team: {
+            name: team.team_name,
+            code: team.team_name?.substring(0, 3).toUpperCase() || 'TBA',
+            flag: team.flag || '🏳️',
+            group: group.name
+          },
+          played: parseInt(team.mp) || 0,
+          won: parseInt(team.w) || 0,
+          drawn: parseInt(team.d) || 0,
+          lost: parseInt(team.l) || 0,
+          goalsFor: parseInt(team.gf) || 0,
+          goalsAgainst: parseInt(team.ga) || 0,
+          goalDifference: parseInt(team.gd) || 0,
+          points: parseInt(team.pts) || 0
+        }))
+      })).sort((a: any, b: any) => a.name.localeCompare(b.name))
 
-    fetchGroups()
-  }, [])
+      return transformedGroups
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  })
+
+  const groups = groupsData || []
 
   if (loading) {
     return (
@@ -100,7 +98,7 @@ export default function GroupsPage() {
 
           {/* Groups Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {groups.map((group) => (
+            {groups.map((group: Group) => (
               <GroupTable key={group.name} group={group} />
             ))}
           </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { PageTransition } from '@/components/page-transition'
 import { SectionTag } from '@/components/section-tag'
 import { cn } from '@/lib/utils'
@@ -39,64 +39,61 @@ interface BracketGame {
 }
 
 export default function BracketPage() {
-  const [games, setGames] = useState<BracketGame[]>([])
-  const [loading, setLoading] = useState(true)
+  // Fetch bracket games with React Query for caching
+  const { data: gamesData, isLoading: loading } = useQuery({
+    queryKey: ['bracket-games'],
+    queryFn: async () => {
+      const response = await fetch('/api/games')
+      if (!response.ok) throw new Error('Failed to fetch bracket games')
+      const data = await response.json()
 
-  useEffect(() => {
-    const fetchBracketGames = async () => {
-      try {
-        const response = await fetch('/api/games')
-        if (response.ok) {
-          const data = await response.json()
-          
-          // Filter games by bracket types
-          const bracketGames = data.games.filter((game: any) => 
-            ROUNDS.includes(game.type)
-          )
-                  
-          // Fill in missing matches with placeholders
-          const completeGames: BracketGame[] = []
-          
-          for (const round of ROUNDS) {
-            const roundGames = bracketGames.filter((g: any) => g.type === round)
-            const expectedCount = MATCHES_PER_ROUND[round]
-            
-            // Add actual games
-            completeGames.push(...roundGames)
-            
-            // Add placeholder matches if needed
-            if (roundGames.length < expectedCount) {
-              const missingCount = expectedCount - roundGames.length
-              for (let i = 0; i < missingCount; i++) {
-                completeGames.push({
-                  id: `${round}-placeholder-${i}`,
-                  home_team_id: null,
-                  away_team_id: null,
-                  home_team_name_en: 'TBA',
-                  away_team_name_en: 'TBA',
-                  home_score: null,
-                  away_score: null,
-                  local_date: 'TBA',
-                  type: round,
-                  stadium_id: '',
-                  finished: 'FALSE',
-                  time_elapsed: 'notstarted',
-                })
-              }
-            }
+      // Filter games by bracket types
+      const bracketGames = data.games.filter((game: any) =>
+        ROUNDS.includes(game.type)
+      )
+
+      // Fill in missing matches with placeholders
+      const completeGames: BracketGame[] = []
+
+      for (const round of ROUNDS) {
+        const roundGames = bracketGames.filter((g: any) => g.type === round)
+        const expectedCount = MATCHES_PER_ROUND[round]
+
+        // Add actual games
+        completeGames.push(...roundGames)
+
+        // Add placeholder matches if needed
+        if (roundGames.length < expectedCount) {
+          const missingCount = expectedCount - roundGames.length
+          for (let i = 0; i < missingCount; i++) {
+            completeGames.push({
+              id: `${round}-placeholder-${i}`,
+              home_team_id: null,
+              away_team_id: null,
+              home_team_name_en: 'TBA',
+              away_team_name_en: 'TBA',
+              home_score: null,
+              away_score: null,
+              local_date: 'TBA',
+              type: round,
+              stadium_id: '',
+              finished: 'FALSE',
+              time_elapsed: 'notstarted',
+            })
           }
-          
-          setGames(completeGames)
         }
-      } catch (error) {
-        console.error('Error fetching bracket games:', error)
-      } finally {
-        setLoading(false)
       }
-    }
 
-    fetchBracketGames()
-  }, [])
+      return completeGames
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  })
+
+  const games = gamesData || []
 
   if (loading) {
     return (
@@ -149,7 +146,7 @@ export default function BracketPage() {
                 <RoundColumn
                   key={round}
                   round={round}
-                  games={games.filter((g) => g.type === round)}
+                  games={games.filter((g: BracketGame) => g.type === round)}
                 />
               ))}
 

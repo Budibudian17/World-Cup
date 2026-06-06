@@ -8,10 +8,11 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left: Logo */}
           <div className="flex flex-col items-center md:items-start">
-            <img 
-              src="/img/logoworldcupbaru.webp" 
+            <img
+              src="/img/logoworldcupbaru.webp"
               alt="FIFA World Cup 2026"
               className="h-16 w-auto mb-4"
+              loading="lazy"
             />
             <p className="font-sans text-sm text-muted-foreground text-center md:text-left">
               Fan-made World Cup 2026 Hub. Not affiliated with FIFA.<br />

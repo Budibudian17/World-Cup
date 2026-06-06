@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { PageTransition } from '@/components/page-transition'
 import { SectionTag } from '@/components/section-tag'
@@ -96,26 +96,23 @@ const getCountryFlag = (countryName: string): string => {
 }
 
 export default function TeamsPage() {
-  const [teams, setTeams] = useState<Team[]>([])
-  const [loading, setLoading] = useState(true)
+  // Fetch teams with React Query for caching
+  const { data: teamsData, isLoading: loading } = useQuery({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const response = await fetch('/api/wc26-teams')
+      if (!response.ok) throw new Error('Failed to fetch teams')
+      const data = await response.json()
+      return data.teams || []
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  })
 
-  useEffect(() => {
-    const fetchTeams = async () => {
-      try {
-        const response = await fetch('/api/wc26-teams')
-        if (response.ok) {
-          const data = await response.json()
-          setTeams(data.teams || [])
-        }
-      } catch (error) {
-        console.error('Error fetching teams:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchTeams()
-  }, [])
+  const teams = teamsData || []
 
   return (
     <PageTransition>
@@ -144,7 +141,7 @@ export default function TeamsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {teams.map((team) => (
+              {teams.map((team: Team) => (
                 <Link
                   key={team.id}
                   href={`/teams/${team.id}`}

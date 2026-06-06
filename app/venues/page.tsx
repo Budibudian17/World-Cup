@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { PageTransition } from '@/components/page-transition'
 import { SectionTag } from '@/components/section-tag'
 import { venues } from '@/lib/data'
@@ -12,108 +13,107 @@ import { motion, AnimatePresence } from 'framer-motion'
 export default function VenuesPage() {
   const [selectedVenue, setSelectedVenue] = useState<Venue | null>(null)
   const [filter, setFilter] = useState<'all' | 'USA' | 'Mexico' | 'Canada'>('all')
-  const [stadiums, setStadiums] = useState<Venue[]>(venues)
-  const [loadingStadiums, setLoadingStadiums] = useState(true)
-  const [countryFlags, setCountryFlags] = useState<Record<string, string>>({})
 
-  useEffect(() => {
-    const fetchStadiums = async () => {
-      try {
-        const response = await fetch('/api/stadiums')
-        if (response.ok) {
-          const data = await response.json()
-          
-          // Transform API data to match Venue type
-          const stadiumsData = data.stadiums || []
-          const transformedStadiums = stadiumsData.map((stadium: any) => ({
-            id: stadium.id,
-            name: stadium.fifa_name || stadium.name_en,
-            city: stadium.city_en,
-            country: stadium.country_en,
-            capacity: stadium.capacity,
-            timezone: 'UTC',
-            matchesHosted: 0,
-            image: '',
-            description: `${stadium.name_en || stadium.fifa_name || 'Stadium'}${stadium.yearOpened ? ` opened in ${stadium.yearOpened}` : ''}${stadium.address ? `. Located at ${stadium.address}` : ''}.`,
-            imageUrl: null,
-            surfaceType: stadium.surface,
-            opened: stadium.yearOpened,
-            elevationM: 0,
-            coordinates: {
-              latitude: 0,
-              longitude: 0,
-            },
-            historicTournaments: [],
-          }))
-          
-          setStadiums(transformedStadiums)
+  // Fetch stadiums with React Query for caching
+  const { data: stadiumsData, isLoading: loadingStadiums } = useQuery({
+    queryKey: ['stadiums'],
+    queryFn: async () => {
+      const response = await fetch('/api/stadiums')
+      if (!response.ok) throw new Error('Failed to fetch stadiums')
+      const data = await response.json()
 
-          // Fetch stadium images from Unsplash
-          const unsplashKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-          const imageMap: Record<string, string> = {}
-          
-          if (unsplashKey) {
-            const imagePromises = transformedStadiums.map(async (stadium: Venue) => {
-              try {
-                const query = encodeURIComponent(`${stadium.name} stadium`)
-                const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${query}&client_id=${unsplashKey}&per_page=1&orientation=landscape`)
-                if (unsplashResponse.ok) {
-                  const unsplashData = await unsplashResponse.json()
-                  if (unsplashData.results?.[0]?.urls?.regular) {
-                    imageMap[stadium.id] = unsplashData.results[0].urls.regular
-                  }
-                }
-              } catch (error) {
-                console.error(`Error fetching Unsplash image for ${stadium.name}:`, error)
+      // Transform API data to match Venue type
+      const stadiumsApi = data.stadiums || []
+      const transformedStadiums = stadiumsApi.map((stadium: any) => ({
+        id: stadium.id,
+        name: stadium.fifa_name || stadium.name_en,
+        city: stadium.city_en,
+        country: stadium.country_en,
+        capacity: stadium.capacity,
+        timezone: 'UTC',
+        matchesHosted: 0,
+        image: '',
+        description: `${stadium.name_en || stadium.fifa_name || 'Stadium'}${stadium.yearOpened ? ` opened in ${stadium.yearOpened}` : ''}${stadium.address ? `. Located at ${stadium.address}` : ''}.`,
+        imageUrl: null,
+        surfaceType: stadium.surface,
+        opened: stadium.yearOpened,
+        elevationM: 0,
+        coordinates: {
+          latitude: 0,
+          longitude: 0,
+        },
+        historicTournaments: [],
+      }))
+
+      // Fetch stadium images from Unsplash
+      const unsplashKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+      const imageMap: Record<string, string> = {}
+
+      if (unsplashKey) {
+        const imagePromises = transformedStadiums.map(async (stadium: Venue) => {
+          try {
+            const query = encodeURIComponent(`${stadium.name} stadium`)
+            const unsplashResponse = await fetch(`https://api.unsplash.com/search/photos?query=${query}&client_id=${unsplashKey}&per_page=1&orientation=landscape`)
+            if (unsplashResponse.ok) {
+              const unsplashData = await unsplashResponse.json()
+              if (unsplashData.results?.[0]?.urls?.regular) {
+                imageMap[stadium.id] = unsplashData.results[0].urls.regular
               }
-            })
-
-            await Promise.all(imagePromises)
-          }
-
-          // Update stadiums with images
-          const stadiumsWithImages = transformedStadiums.map((stadium: Venue) => ({
-            ...stadium,
-            imageUrl: imageMap[stadium.id] || null,
-            image: imageMap[stadium.id] || '',
-          }))
-          setStadiums(stadiumsWithImages)
-
-          // Fetch flag URLs for unique countries
-          const uniqueCountries = new Set(transformedStadiums.map((s: Venue) => s.country))
-          const flagMap: Record<string, string> = {}
-          const flagPromises = Array.from(uniqueCountries).map(async (countryName: unknown) => {
-            const name = String(countryName)
-            try {
-              const teamsResponse = await fetch('/api/teams')
-              if (teamsResponse.ok) {
-                const teamsData = await teamsResponse.json()
-                const team = teamsData.teams?.find((t: any) => t.name_en === name)
-                if (team?.flag) {
-                  flagMap[name] = typeof team.flag === 'string' ? team.flag : team.flag?.flagUrl
-                }
-              }
-            } catch (error) {
-              console.error(`Error fetching flag for ${name}:`, error)
             }
-          })
+          } catch (error) {
+            console.error(`Error fetching Unsplash image for ${stadium.name}:`, error)
+          }
+        })
 
-          await Promise.all(flagPromises)
-          setCountryFlags(flagMap)
-        }
-      } catch (error) {
-        console.error('Error fetching stadiums:', error)
-      } finally {
-        setLoadingStadiums(false)
+        await Promise.all(imagePromises)
       }
-    }
 
-    fetchStadiums()
-  }, [])
+      // Update stadiums with images
+      const stadiumsWithImages = transformedStadiums.map((stadium: Venue) => ({
+        ...stadium,
+        imageUrl: imageMap[stadium.id] || null,
+        image: imageMap[stadium.id] || '',
+      }))
 
-  const filteredVenues = filter === 'all' 
-    ? stadiums 
-    : stadiums.filter((v) => v.country === filter || (filter === 'USA' && v.country === 'United States'))
+      // Fetch flag URLs for unique countries
+      const uniqueCountries = new Set(transformedStadiums.map((s: Venue) => s.country))
+      const flagMap: Record<string, string> = {}
+      const flagPromises = Array.from(uniqueCountries).map(async (countryName: unknown) => {
+        const name = String(countryName)
+        try {
+          const teamsResponse = await fetch('/api/teams')
+          if (teamsResponse.ok) {
+            const teamsData = await teamsResponse.json()
+            const team = teamsData.teams?.find((t: any) => t.name_en === name)
+            if (team?.flag) {
+              flagMap[name] = typeof team.flag === 'string' ? team.flag : team.flag?.flagUrl
+            }
+          }
+        } catch (error) {
+          console.error(`Error fetching flag for ${name}:`, error)
+        }
+      })
+
+      await Promise.all(flagPromises)
+
+      return {
+        stadiums: stadiumsWithImages,
+        countryFlags: flagMap,
+      }
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  })
+
+  const stadiums = stadiumsData?.stadiums || venues
+  const countryFlags = stadiumsData?.countryFlags || {}
+
+  const filteredVenues = filter === 'all'
+    ? stadiums
+    : stadiums.filter((v: Venue) => v.country === filter || (filter === 'USA' && v.country === 'United States'))
 
   return (
     <PageTransition>
@@ -166,7 +166,7 @@ export default function VenuesPage() {
                 </div>
               ))
             ) : (
-              filteredVenues.map((venue) => (
+              filteredVenues.map((venue: Venue) => (
                 <VenueCard
                   key={venue.id}
                   venue={venue}

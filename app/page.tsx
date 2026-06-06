@@ -175,7 +175,7 @@ export default function HomePage() {
           preload="auto"
           className="absolute inset-0 w-full h-full object-cover"
         >
-          <source src="/video/worldcupintro.mp4" type="video/mp4" />
+          <source src="/video/worldcupintros.mp4" type="video/mp4" />
         </video>
 
         {/* Dark Overlay */}

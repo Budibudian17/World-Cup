@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import dynamic from 'next/dynamic'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { OrbitControls, Html, useTexture } from '@react-three/drei'
 import { useTheme } from 'next-themes'
-
-const Globe = dynamic(() => import('react-globe.gl'), { ssr: false })
+import * as THREE from 'three'
 
 interface Venue {
   name: string
@@ -98,18 +98,111 @@ const stadiumCoordinates: Record<string, { lat: number; lng: number }> = {
   'BMO Field': { lat: 43.6319, lng: -79.3796 },
 }
 
+function FlagMarker({ flagUrl, position, onClick }: { flagUrl: string; position: [number, number, number]; onClick: () => void }) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const texture = useTexture(flagUrl) as THREE.Texture
+  const { camera } = useThree()
+
+  useFrame(() => {
+    if (meshRef.current) {
+      meshRef.current.lookAt(camera.position)
+    }
+  })
+
+  return (
+    <mesh
+      ref={meshRef}
+      position={position}
+      onClick={onClick}
+    >
+      <planeGeometry args={[0.08, 0.05]} />
+      <meshBasicMaterial map={texture} transparent />
+    </mesh>
+  )
+}
+
+function GlobeMarker({ marker, onClick }: { marker: Marker; onClick: () => void }) {
+  const meshRef = useRef<THREE.Mesh>(null)
+  const flagUrl = marker.type === 'country' && 'flagUrl' in marker ? marker.flagUrl : undefined
+
+  // Convert lat/lng to 3D position on sphere
+  const phi = (90 - marker.lat) * (Math.PI / 180)
+  const theta = (marker.lng + 180) * (Math.PI / 180)
+  const radius = 1.01 // Slightly above the globe surface
+
+  const x = -radius * Math.sin(phi) * Math.cos(theta)
+  const y = radius * Math.cos(phi)
+  const z = radius * Math.sin(phi) * Math.sin(theta)
+
+  if (marker.type === 'country' && flagUrl) {
+    // Render flag as a plane for countries
+    return <FlagMarker flagUrl={flagUrl} position={[x, y, z]} onClick={onClick} />
+  }
+
+  // Render colored sphere for venues or countries without flags
+  return (
+    <mesh
+      ref={meshRef}
+      position={[x, y, z]}
+      onClick={onClick}
+    >
+      <sphereGeometry args={marker.type === 'venue' ? [0.02, 16, 16] : [0.015, 16, 16]} />
+      <meshStandardMaterial
+        color={marker.type === 'venue' ? '#C9A84C' : '#3B82F6'}
+        emissive={marker.type === 'venue' ? '#C9A84C' : '#3B82F6'}
+        emissiveIntensity={0.5}
+      />
+    </mesh>
+  )
+}
+
+function EarthGlobe({ markers, onMarkerClick }: { markers: Marker[]; onMarkerClick: (marker: Marker) => void }) {
+  const { theme } = useTheme()
+  const globeRef = useRef<THREE.Mesh>(null)
+  const earthTexture = useTexture('//unpkg.com/three-globe/example/img/earth-blue-marble.jpg') as THREE.Texture
+  const earthDarkTexture = useTexture('//unpkg.com/three-globe/example/img/earth-dark.jpg') as THREE.Texture
+
+  return (
+    <>
+      <ambientLight intensity={theme === 'dark' ? 2 : 1} />
+      <directionalLight position={[5, 5, 5]} intensity={theme === 'dark' ? 2.5 : 1.5} />
+      <directionalLight position={[-5, -5, -5]} intensity={theme === 'dark' ? 1.5 : 0.5} />
+      <pointLight position={[10, 10, 10]} intensity={theme === 'dark' ? 2 : 1} />
+      <mesh ref={globeRef}>
+        <sphereGeometry args={[1, 64, 64]} />
+        <meshStandardMaterial
+          map={theme === 'dark' ? earthDarkTexture : earthTexture}
+          roughness={0.5}
+          metalness={0.1}
+        />
+      </mesh>
+      {markers.map((marker, idx) => (
+        <GlobeMarker
+          key={`${marker.type}-${idx}`}
+          marker={marker}
+          onClick={() => onMarkerClick(marker)}
+        />
+      ))}
+      <OrbitControls
+        enableZoom={true}
+        enablePan={false}
+        minDistance={1.5}
+        maxDistance={3}
+        autoRotate={true}
+        autoRotateSpeed={0.5}
+      />
+    </>
+  )
+}
+
 export function WorldGlobe() {
   const { theme } = useTheme()
-  const globeEl = useRef<any>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [width, setWidth] = useState(0)
-  const [height, setHeight] = useState(0)
   const [mounted, setMounted] = useState(false)
   const [countries, setCountries] = useState<Country[]>([])
   const [markers, setMarkers] = useState<Marker[]>([])
   const [selectedMarker, setSelectedMarker] = useState<Marker | null>(null)
   const [teamInfo, setTeamInfo] = useState<any>(null)
-  const [loadingTeam, setLoadingTeam] = useState(false)
   const [dataFetched, setDataFetched] = useState(false)
   const [worldCupHistory, setWorldCupHistory] = useState<Array<{ year: number; result: string }>>([])
   const [loadingHistory, setLoadingHistory] = useState(false)
@@ -132,7 +225,7 @@ export function WorldGlobe() {
         if (teamsResponse.ok && stadiumsResponse.ok) {
           const teamsData = await teamsResponse.json()
           const stadiumsData = await stadiumsResponse.json()
-          
+
           const countryMarkers: Country[] = teamsData.teams
             .map((team: any) => {
               const coords = countryCoordinates[team.iso2]
@@ -149,7 +242,7 @@ export function WorldGlobe() {
               return null
             })
             .filter((c: Country | null) => c !== null) as Country[]
-          
+
           const venueMarkers: Venue[] = stadiumsData.stadiums
             .map((stadium: any) => {
               const coords = stadiumCoordinates[stadium.name_en]
@@ -166,7 +259,7 @@ export function WorldGlobe() {
               return null
             })
             .filter((v: Venue | null) => v !== null) as Venue[]
-          
+
           setCountries(countryMarkers)
           setMarkers([...venueMarkers, ...countryMarkers])
         }
@@ -214,37 +307,6 @@ export function WorldGlobe() {
     fetchHistory()
   }, [selectedMarker])
 
-  // Animate globe to selected marker position
-  useEffect(() => {
-    if (!selectedMarker || !globeEl.current) return
-
-    globeEl.current.pointOfView(
-      { lat: selectedMarker.lat, lng: selectedMarker.lng, altitude: 2.5 },
-      1000 // 1000ms animation duration
-    )
-  }, [selectedMarker])
-
-  useEffect(() => {
-    if (!mounted || !containerRef.current) return
-    
-    const updateSize = () => {
-      if (containerRef.current) {
-        setWidth(containerRef.current.clientWidth)
-        setHeight(containerRef.current.clientHeight)
-      }
-    }
-    
-    updateSize()
-    window.addEventListener('resize', updateSize)
-    return () => window.removeEventListener('resize', updateSize)
-  }, [mounted])
-
-  useEffect(() => {
-    if (globeEl.current && mounted) {
-      globeEl.current.pointOfView({ lat: 20, lng: -100, altitude: 2.5 })
-    }
-  }, [mounted])
-
   if (!mounted) {
     return (
       <div className="w-full h-[500px] md:h-[600px] lg:h-[700px] flex items-center justify-center">
@@ -255,89 +317,25 @@ export function WorldGlobe() {
 
   return (
     <div className="relative">
-      <div 
+      <div
         ref={containerRef}
         className="w-full h-[500px] md:h-[600px] lg:h-[700px] relative bg-secondary/30 rounded-xl border border-border overflow-hidden cursor-move"
       >
-        <Globe
-          ref={globeEl}
-          globeImageUrl={theme === 'dark' ? '//unpkg.com/three-globe/example/img/earth-dark.jpg' : '//unpkg.com/three-globe/example/img/earth-blue-marble.jpg'}
-          backgroundColor="rgba(0, 0, 0, 0)"
-          pointsData={markers}
-          pointLat="lat"
-          pointLng="lng"
-          pointColor={(marker: any) => marker.type === 'venue' ? '#C9A84C' : '#3B82F6'}
-          pointAltitude={(marker: any) => marker.type === 'venue' ? 0.02 : 0.01}
-          pointRadius={(marker: any) => marker.type === 'venue' ? 0.8 : 0.5}
-          pointLabel={(marker: any) => {
-            const isVenue = marker.type === 'venue'
-            const borderColor = isVenue ? '#C9A84C' : '#3B82F6'
-            
-            // If it's a country with a flag, show the flag image
-            if (!isVenue && marker.flagUrl) {
-              return `
-                <div style="
-                  display: flex;
-                  align-items: center;
-                  gap: 8px;
-                ">
-                  <img 
-                    src="${marker.flagUrl}" 
-                    alt="${marker.name}"
-                    style="width: 32px; height: 20px; object-fit: cover; border-radius: 3px; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"
-                  />
-                  <div style="
-                    background: rgba(0, 0, 0, 0.9);
-                    color: #f5f0e8;
-                    padding: 6px 10px;
-                    border-radius: 6px;
-                    font-size: 12px;
-                    border: 1px solid ${borderColor};
-                    white-space: nowrap;
-                    font-weight: bold;
-                  ">
-                    ${marker.name}
-                  </div>
-                </div>
-              `
-            }
-            
-            // Default label for venues or countries without flags
-            const content = isVenue 
-              ? `<strong>${marker.name}</strong><br/>${marker.city}, ${marker.country}`
-              : `<strong>${marker.name}</strong>`
-            
-            return `
-              <div style="
-                background: rgba(0, 0, 0, 0.8);
-                color: #f5f0e8;
-                padding: 8px 12px;
-                border-radius: 4px;
-                font-size: 12px;
-                border: 1px solid ${borderColor};
-              ">
-                ${content}
-              </div>
-            `
-          }}
-          onPointClick={(marker: any) => {
-            setSelectedMarker(marker)
-          }}
-          width={width}
-          height={height}
-        />
+        <Canvas>
+          <EarthGlobe markers={markers} onMarkerClick={setSelectedMarker} />
+        </Canvas>
       </div>
 
       {/* Info Card */}
       {selectedMarker && (
-        <div className="absolute top-4 right-4 w-80 bg-card border border-border rounded-xl p-4 shadow-lg z-10">
+        <div className="absolute top-4 right-4 w-80 max-w-[calc(100%-2rem)] md:w-80 bg-card border border-border rounded-xl p-4 shadow-lg z-10">
           <button
             onClick={() => setSelectedMarker(null)}
             className="absolute top-2 right-2 text-muted-foreground hover:text-foreground"
           >
             ✕
           </button>
-          
+
           {selectedMarker.type === 'venue' ? (
             <div>
               <h3 className="font-(family-name:--font-barlow-condensed) font-bold text-lg text-wc-gold mb-2">
@@ -356,8 +354,8 @@ export function WorldGlobe() {
                 {selectedMarker.name}
               </h3>
               {teamInfo?.flag && (
-                <img 
-                  src={teamInfo.flag} 
+                <img
+                  src={teamInfo.flag}
                   alt={selectedMarker.name}
                   className="w-12 h-8 object-cover rounded mb-2"
                 />
@@ -365,7 +363,7 @@ export function WorldGlobe() {
               <p className="text-sm text-muted-foreground mb-3">
                 Participating in World Cup 2026
               </p>
-              
+
               {loadingHistory ? (
                 <p className="text-xs text-muted-foreground">Loading history...</p>
               ) : worldCupHistory.length > 0 ? (

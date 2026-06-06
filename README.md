@@ -186,7 +186,7 @@ worldcup/
 │   │   ├── logoworldcuphitam.webp
 │   │   └── logoworldcupputih.webp
 │   └── video/               # Video files
-│       └── worldcupintro.mp4
+│       └── worldcupintros.mp4
 ├── styles/                  # Additional styles
 │   └── globals.css
 ├── .env                     # Environment variables

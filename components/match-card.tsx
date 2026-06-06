@@ -1,15 +1,51 @@
 import type { Match } from '@/lib/types'
-import { MapPin, HelpCircle } from 'lucide-react'
+import { MapPin, HelpCircle, Lock, X } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 
 interface MatchCardProps {
   match: Match
 }
 
 export function MatchCard({ match }: MatchCardProps) {
+  const [showModal, setShowModal] = useState(false)
+
+  // Calculate if match is within H-1 (1 day before match)
+  const isWithinH1 = (() => {
+    const [datePart, timePart] = match.date.split(' ')
+    const [month, day, year] = datePart.split('/')
+    const [hours, minutes] = match.time.split(':')
+    const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
+    const now = new Date()
+    const hoursUntilMatch = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+    return hoursUntilMatch <= 24 && hoursUntilMatch > -48
+  })()
+
+  const hoursUntilMatch = (() => {
+    const [datePart, timePart] = match.date.split(' ')
+    const [month, day, year] = datePart.split('/')
+    const [hours, minutes] = match.time.split(':')
+    const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
+    const now = new Date()
+    return (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+  })()
+
+  const handleClick = () => {
+    if (isWithinH1) {
+      // Navigate to detail page
+      window.location.href = `/matches/${match.id}`
+    } else {
+      // Show modal
+      setShowModal(true)
+    }
+  }
+
   return (
-    <Link href={`/matches/${match.id}`} className="block">
-      <div className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group min-w-[320px] cursor-pointer">
+    <>
+      <div
+        onClick={handleClick}
+        className="bg-card border border-border rounded-lg p-4 transition-all duration-150 hover:border-wc-gold hover:-translate-y-0.5 group min-w-[320px] cursor-pointer"
+      >
       {/* Live badge */}
       {match.isLive && (
         <div className="flex items-center gap-1.5 mb-3">
@@ -25,8 +61,8 @@ export function MatchCard({ match }: MatchCardProps) {
         {/* Team A */}
         <div className="flex-1 flex items-center gap-3">
           {match.flagUrlA ? (
-            <img 
-              src={match.flagUrlA} 
+            <img
+              src={match.flagUrlA}
               alt={match.teamA.name}
               className="w-8 h-6 object-cover rounded"
             />
@@ -70,8 +106,8 @@ export function MatchCard({ match }: MatchCardProps) {
             {match.teamB.code}
           </span>
           {match.flagUrlB ? (
-            <img 
-              src={match.flagUrlB} 
+            <img
+              src={match.flagUrlB}
               alt={match.teamB.name}
               className="w-8 h-6 object-cover rounded"
             />
@@ -100,6 +136,34 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
       </div>
     </div>
-    </Link>
+
+    {/* Modal Popup */}
+    {showModal && (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-card border border-border rounded-lg p-6 max-w-md w-full relative">
+          <button
+            onClick={() => setShowModal(false)}
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="text-center">
+            <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-4" />
+            <h2 className="font-[family-name:var(--font-barlow-condensed)] font-bold text-lg uppercase text-foreground mb-2">
+              Match Details Coming Soon
+            </h2>
+            <p className="text-muted-foreground text-sm mb-4">
+              Detailed information will be available 1 day before the match.
+            </p>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-wc-gold/10 rounded-md">
+              <span className="text-xs font-semibold text-wc-gold">
+                Available in {hoursUntilMatch > 0 ? `${Math.ceil(hoursUntilMatch / 24)} day${Math.ceil(hoursUntilMatch / 24) > 1 ? 's' : ''}` : 'less than a day'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }

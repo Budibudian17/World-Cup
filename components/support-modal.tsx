@@ -8,14 +8,14 @@ export function SupportModal() {
   const [hasShown, setHasShown] = useState(false)
 
   useEffect(() => {
-    // Check if user has already seen the modal
-    const hasSeenModal = localStorage.getItem('supportModalShown')
+    // Check if user has already seen the modal in this session
+    const hasSeenModal = sessionStorage.getItem('supportModalShown')
     if (!hasSeenModal) {
       // Show modal after 3 seconds
       const timer = setTimeout(() => {
         setIsOpen(true)
         setHasShown(true)
-        localStorage.setItem('supportModalShown', 'true')
+        sessionStorage.setItem('supportModalShown', 'true')
       }, 3000)
       return () => clearTimeout(timer)
     }

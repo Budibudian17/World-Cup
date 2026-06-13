@@ -157,3 +157,33 @@ export async function getHeadToHead(team1Id: number, team2Id: number) {
     LINEUP_CACHE_DURATION
   )
 }
+
+// Find fixture ID by team names and date
+export async function findFixtureId(homeTeamName: string, awayTeamName: string, date: string) {
+  try {
+    // Search for fixtures on the given date
+    const response = await fetchWithCache(
+      `${API_BASE_URL}/fixtures?date=${date}`,
+      LINEUP_CACHE_DURATION
+    )
+
+    if (!response || !response.response) {
+      console.log('No fixtures found for date:', date)
+      return null
+    }
+
+    // Find the matching fixture by team names
+    const matchingFixture = response.response.find((fixture: any) => {
+      const homeTeam = fixture.teams?.home?.name?.toLowerCase()
+      const awayTeam = fixture.teams?.away?.name?.toLowerCase()
+      const homeMatch = homeTeam === homeTeamName.toLowerCase()
+      const awayMatch = awayTeam === awayTeamName.toLowerCase()
+      return homeMatch && awayMatch
+    })
+
+    return matchingFixture?.fixture?.id || null
+  } catch (error) {
+    console.error('Error finding fixture ID:', error)
+    return null
+  }
+}

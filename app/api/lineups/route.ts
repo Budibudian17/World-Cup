@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getFixtureLineups } from '@/lib/api-football-client'
+import { getFixtureLineups, findFixtureId } from '@/lib/api-football-client'
 
 // Cache for 24 hours
 export const revalidate = 86400
@@ -81,39 +81,34 @@ export async function GET(request: Request) {
   }
 
   try {
-    const data = await getFixtureLineups(fixtureId)
-    
-    // Check if API returned empty or invalid data
-    if (!data || !data.response || data.response.length === 0) {
-      console.log('API returned empty lineup data, using fallback')
-      throw new Error('Empty lineup data from API')
-    }
-    
-    return NextResponse.json(data)
-  } catch (error) {
-    console.error('Error fetching lineups:', error)
-    
-    // Fetch match data to get actual team names
+    // Fetch match data to get team names and date
     let homeTeamName = "Home Team"
     let awayTeamName = "Away Team"
+    let matchDate = ""
     let homeTeamFlag = null
     let awayTeamFlag = null
-    
+
     try {
       const gamesRes = await fetch('https://worldcup26.ir/get/games')
       const gamesData = gamesRes.ok ? await gamesRes.json() : { games: [] }
       const matchData = gamesData.games.find((m: any) => m.id === fixtureId)
-      
+
       if (matchData) {
         homeTeamName = matchData.home_team_name_en || "Home Team"
         awayTeamName = matchData.away_team_name_en || "Away Team"
-        
+
+        // Parse date from API format (MM/DD/YYYY HH:mm)
+        const [datePart, timePart] = matchData.local_date.split(' ')
+        const [month, day, year] = datePart.split('/')
+        // Convert to YYYY-MM-DD format for API-Football
+        matchDate = `${year}-${month}-${day}`
+
         // Get team flags
         const teamsRes = await fetch('https://worldcup26.ir/get/teams')
         const teamsData = teamsRes.ok ? await teamsRes.json() : { teams: [] }
         const homeTeam = teamsData.teams.find((t: any) => t.name_en === homeTeamName)
         const awayTeam = teamsData.teams.find((t: any) => t.name_en === awayTeamName)
-        
+
         if (homeTeam) {
           homeTeamFlag = typeof homeTeam.flag === 'string' ? homeTeam.flag : homeTeam.flag?.flagUrl
         }
@@ -124,8 +119,31 @@ export async function GET(request: Request) {
     } catch (fetchError) {
       console.error('Error fetching match data:', fetchError)
     }
-    
-    // Return dynamic fallback data based on actual match
+
+    // Try to find the fixture ID in API-Football
+    let apiFootballFixtureId = null
+    if (matchDate && homeTeamName && awayTeamName) {
+      apiFootballFixtureId = await findFixtureId(homeTeamName, awayTeamName, matchDate)
+      console.log('Found API-Football fixture ID:', apiFootballFixtureId)
+    }
+
+    // If we found a fixture ID, try to get lineups
+    if (apiFootballFixtureId) {
+      try {
+        const data = await getFixtureLineups(apiFootballFixtureId.toString())
+
+        // Check if API returned valid lineup data
+        if (data && data.response && data.response.length > 0) {
+          console.log('Successfully fetched lineups from API-Football')
+          return NextResponse.json(data)
+        }
+      } catch (lineupError) {
+        console.error('Error fetching lineups from API-Football:', lineupError)
+      }
+    }
+
+    // Fallback to TBA data
+    console.log('Using fallback TBA data')
     const fallbackData = {
       response: [
         {
@@ -160,7 +178,10 @@ export async function GET(request: Request) {
         }
       ]
     }
-    
+
     return NextResponse.json(fallbackData)
+  } catch (error) {
+    console.error('Error in lineups API:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -161,27 +161,73 @@ export async function getHeadToHead(team1Id: number, team2Id: number) {
 // Find fixture ID by team names and date
 export async function findFixtureId(homeTeamName: string, awayTeamName: string, date: string) {
   try {
-    // Search for fixtures on the given date
+    // First try: Search by date
     const response = await fetchWithCache(
       `${API_BASE_URL}/fixtures?date=${date}`,
       LINEUP_CACHE_DURATION
     )
 
-    if (!response || !response.response) {
-      console.log('No fixtures found for date:', date)
-      return null
+    if (response && response.response && response.response.length > 0) {
+      // Find the matching fixture by team names
+      const matchingFixture = response.response.find((fixture: any) => {
+        const homeTeam = fixture.teams?.home?.name?.toLowerCase()
+        const awayTeam = fixture.teams?.away?.name?.toLowerCase()
+        const homeMatch = homeTeam === homeTeamName.toLowerCase()
+        const awayMatch = awayTeam === awayTeamName.toLowerCase()
+        return homeMatch && awayMatch
+      })
+
+      if (matchingFixture) {
+        return matchingFixture.fixture?.id || null
+      }
     }
 
-    // Find the matching fixture by team names
-    const matchingFixture = response.response.find((fixture: any) => {
-      const homeTeam = fixture.teams?.home?.name?.toLowerCase()
-      const awayTeam = fixture.teams?.away?.name?.toLowerCase()
-      const homeMatch = homeTeam === homeTeamName.toLowerCase()
-      const awayMatch = awayTeam === awayTeamName.toLowerCase()
-      return homeMatch && awayMatch
-    })
+    // Second try: Search by team IDs (need to get team IDs first)
+    const homeTeamSearch = await searchTeams(homeTeamName)
+    const awayTeamSearch = await searchTeams(awayTeamName)
 
-    return matchingFixture?.fixture?.id || null
+    const homeTeamId = homeTeamSearch?.response?.[0]?.team?.id
+    const awayTeamId = awayTeamSearch?.response?.[0]?.team?.id
+
+    if (homeTeamId && awayTeamId) {
+      // Try searching for fixtures by home team ID and date
+      const homeTeamResponse = await fetchWithCache(
+        `${API_BASE_URL}/fixtures?team=${homeTeamId}&date=${date}`,
+        LINEUP_CACHE_DURATION
+      )
+
+      if (homeTeamResponse && homeTeamResponse.response && homeTeamResponse.response.length > 0) {
+        // Find the fixture with the away team
+        const matchingFixture = homeTeamResponse.response.find((fixture: any) => {
+          const awayTeamIdCheck = fixture.teams?.away?.id
+          return awayTeamIdCheck === awayTeamId
+        })
+
+        if (matchingFixture) {
+          return matchingFixture.fixture?.id || null
+        }
+      }
+
+      // Third try: Search for H2H fixtures
+      const h2hResponse = await fetchWithCache(
+        `${API_BASE_URL}/fixtures/headtohead?h2h=${homeTeamId}-${awayTeamId}`,
+        LINEUP_CACHE_DURATION
+      )
+
+      if (h2hResponse && h2hResponse.response && h2hResponse.response.length > 0) {
+        // Find the fixture on the specific date
+        const matchingFixture = h2hResponse.response.find((fixture: any) => {
+          const fixtureDate = fixture.fixture?.date?.split('T')[0]
+          return fixtureDate === date
+        })
+
+        if (matchingFixture) {
+          return matchingFixture.fixture?.id || null
+        }
+      }
+    }
+
+    return null
   } catch (error) {
     console.error('Error finding fixture ID:', error)
     return null

@@ -12,20 +12,44 @@ export function MatchCard({ match }: MatchCardProps) {
 
   // Calculate if match is within H-1 (1 day before match)
   const isWithinH1 = (() => {
-    const [datePart, timePart] = match.date.split(' ')
-    const [month, day, year] = datePart.split('/')
-    const [hours, minutes] = match.time.split(':')
-    const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
+    // If match is finished, always allow access
+    if (match.finished === 'TRUE') {
+      return true
+    }
+
+    // If match is live, always allow access
+    if (match.isLive) {
+      return true
+    }
+
+    // Parse the date (format: YYYY-MM-DD from the API transformation)
+    const dateStr = match.date
+    const timeStr = match.time
+
+    // Create match date object
+    const matchDate = new Date(`${dateStr}T${timeStr}:00`)
     const now = new Date()
     const hoursUntilMatch = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60)
     return hoursUntilMatch <= 24 && hoursUntilMatch > -48
   })()
 
   const hoursUntilMatch = (() => {
-    const [datePart, timePart] = match.date.split(' ')
-    const [month, day, year] = datePart.split('/')
-    const [hours, minutes] = match.time.split(':')
-    const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
+    // If match is finished, return 0
+    if (match.finished === 'TRUE') {
+      return 0
+    }
+
+    // If match is live, return 0
+    if (match.isLive) {
+      return 0
+    }
+
+    // Parse the date (format: YYYY-MM-DD from the API transformation)
+    const dateStr = match.date
+    const timeStr = match.time
+
+    // Create match date object
+    const matchDate = new Date(`${dateStr}T${timeStr}:00`)
     const now = new Date()
     return (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60)
   })()

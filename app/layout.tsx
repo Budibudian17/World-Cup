@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   title: 'FIFA World Cup 2026 | Fan Hub',
   description: 'Your ultimate destination for FIFA World Cup 2026. Live scores, brackets, predictions, and more.',
   keywords: 'FIFA, World Cup, 2026, Soccer, Football, USA, Canada, Mexico',
+  openGraph: {
+    siteName: 'FIFA World Cup 2026 Fan Hub',
+  },
   icons: {
     icon: '/img/logoworldcupbaru.ico',
     shortcut: '/img/logoworldcupbaru.ico',
@@ -38,6 +41,19 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${barlowCondensed.variable} ${notoSans.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'FIFA World Cup 2026 Fan Hub',
+              url: 'https://www.worldcupfanhub.xyz',
+            }),
+          }}
+        />
+      </head>
       <body className="font-sans antialiased bg-background">
         <QueryProvider>
           <ThemeProvider

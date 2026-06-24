@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 export async function GET(request: Request) {
   try {
     const apiKey = process.env.NEXT_PUBLIC_RAPIDAPI_KEY
-    
+
     if (!apiKey) {
       throw new Error('RAPIDAPI_KEY not found')
     }
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const teamId = searchParams.get('teamId')
 
-    const url = teamId 
+    const url = teamId
       ? `https://world-cup-2026.p.rapidapi.com/world-cup-2026/players?teamId=${teamId}`
       : 'https://world-cup-2026.p.rapidapi.com/world-cup-2026/players'
 

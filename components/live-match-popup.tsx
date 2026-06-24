@@ -67,13 +67,13 @@ export function LiveMatchPopup({ liveMatches }: LiveMatchPopupProps) {
                 {currentMatch.teamA.name}
               </span>
               <span className="font-bold text-lg text-wc-gold">
-                {currentMatch.scoreA ?? 0}
+                {currentMatch.scoreA ?? '-'}
               </span>
             </div>
             <span className="text-xs text-muted-foreground">vs</span>
             <div className="flex items-center gap-2">
               <span className="font-bold text-lg text-wc-gold">
-                {currentMatch.scoreB ?? 0}
+                {currentMatch.scoreB ?? '-'}
               </span>
               <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-sm text-foreground">
                 {currentMatch.teamB.name}

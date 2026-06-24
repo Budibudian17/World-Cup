@@ -34,6 +34,7 @@ export default function PlayersPage() {
   useEffect(() => {
     const fetchPlayers = async () => {
       try {
+        setLoading(true)
         const response = await fetch('/api/wc26-players')
         if (response.ok) {
           const data = await response.json()

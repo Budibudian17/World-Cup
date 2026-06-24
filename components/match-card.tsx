@@ -83,7 +83,7 @@ export function MatchCard({ match }: MatchCardProps) {
       {/* Teams and Score */}
       <div className="flex items-center justify-between gap-4">
         {/* Team A */}
-        <div className="flex-1 flex items-center gap-3">
+        <div className={`flex-1 flex items-center gap-3 ${match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreA! > match.scoreB! ? 'opacity-100' : match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreA! < match.scoreB! ? 'opacity-50' : ''}`}>
           {match.flagUrlA ? (
             <img
               src={match.flagUrlA}
@@ -95,7 +95,7 @@ export function MatchCard({ match }: MatchCardProps) {
           ) : (
             <span className="text-2xl">{match.teamA.flag}</span>
           )}
-          <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-sm sm:text-base uppercase tracking-wide text-foreground">
+          <span className={`font-[family-name:var(--font-barlow-condensed)] font-bold text-sm sm:text-base uppercase tracking-wide ${match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreA! > match.scoreB! ? 'text-wc-gold' : match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreA! < match.scoreB! ? 'text-muted-foreground' : 'text-foreground'}`}>
             {match.teamA.code}
           </span>
         </div>
@@ -103,13 +103,13 @@ export function MatchCard({ match }: MatchCardProps) {
         {/* Score */}
         <div className="flex flex-col items-center gap-1">
           <div className="flex items-center gap-2">
-            {match.scoreA !== null && match.scoreB !== null ? (
+            {(match.finished === 'TRUE' || match.isLive) && match.scoreA !== null && match.scoreB !== null ? (
               <>
-                <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl text-foreground bg-secondary px-3 py-1 rounded">
+                <span className={`font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl ${match.scoreA! > match.scoreB! ? 'text-wc-gold' : match.scoreA! < match.scoreB! ? 'text-muted-foreground' : 'text-foreground'} bg-secondary px-3 py-1 rounded`}>
                   {match.scoreA}
                 </span>
                 <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-muted-foreground">-</span>
-                <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl text-foreground bg-secondary px-3 py-1 rounded">
+                <span className={`font-[family-name:var(--font-barlow-condensed)] font-black text-xl sm:text-2xl ${match.scoreB! > match.scoreA! ? 'text-wc-gold' : match.scoreB! < match.scoreA! ? 'text-muted-foreground' : 'text-foreground'} bg-secondary px-3 py-1 rounded`}>
                   {match.scoreB}
                 </span>
               </>
@@ -125,8 +125,8 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         {/* Team B */}
-        <div className="flex-1 flex items-center justify-end gap-3">
-          <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-sm sm:text-base uppercase tracking-wide text-foreground">
+        <div className={`flex-1 flex items-center justify-end gap-3 ${match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreB! > match.scoreA! ? 'opacity-100' : match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreB! < match.scoreA! ? 'opacity-50' : ''}`}>
+          <span className={`font-[family-name:var(--font-barlow-condensed)] font-bold text-sm sm:text-base uppercase tracking-wide ${match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreB! > match.scoreA! ? 'text-wc-gold' : match.finished === 'TRUE' && match.scoreA !== null && match.scoreB !== null && match.scoreB! < match.scoreA! ? 'text-muted-foreground' : 'text-foreground'}`}>
             {match.teamB.code}
           </span>
           {match.flagUrlB ? (

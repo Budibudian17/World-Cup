@@ -6,6 +6,7 @@ interface Player {
   number: number
   photo: string
   pos: string
+  grid?: string
 }
 
 interface LineupPlayer {
@@ -42,6 +43,44 @@ interface LineupFieldProps {
   awayTeamName?: string
 }
 
+// Parse grid position string (e.g., "2:4") to row and column
+function parseGridPosition(grid: string): { row: number; col: number } {
+  const [row, col] = grid.split(':').map(Number)
+  return { row, col }
+}
+
+// Convert grid position to percentage coordinates
+function gridToPercentage(grid: string, isHome: boolean): { x: number; y: number } {
+  const { row, col } = parseGridPosition(grid)
+
+  // Grid system: row = depth (1=GK, higher=forwards), col = width (1=left, higher=right)
+  // Assuming max grid is 5x5 based on typical formations
+
+  const maxRow = 5
+  const maxCol = 5
+
+  // Convert to percentage (0-100)
+  // For horizontal field:
+  // col (width) maps to y (top to bottom) - spread players vertically
+  // row (depth) maps to x (left to right) - GK to forwards
+  const depthPercent = ((row - 1) / (maxRow - 1)) * 100
+  const widthPercent = ((col - 1) / (maxCol - 1)) * 100
+
+  if (isHome) {
+    // Home team on left half: GK at left edge (x=2.5%), forwards at center (x=47.5%)
+    // Spread players across full height (y)
+    const x = depthPercent * 0.45 + 2.5
+    const y = widthPercent * 0.8 + 10
+    return { x, y }
+  } else {
+    // Away team on right half: GK at right edge (x=97.5%), forwards at center (x=52.5%)
+    // Spread players across full height (y)
+    const x = 100 - (depthPercent * 0.45 + 2.5)
+    const y = widthPercent * 0.8 + 10
+    return { x, y }
+  }
+}
+
 // Generate positions based on formation string
 function generatePositionsFromFormation(formation: string, isHome: boolean) {
   const positions: Array<{ x: number; y: number }> = []
@@ -75,15 +114,25 @@ function generatePositionsFromFormation(formation: string, isHome: boolean) {
 }
 
 export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, homeFlagUrl, awayFlagUrl, homeTeamName, awayTeamName }: LineupFieldProps) {
-  // Generate positions if not provided
+  // Generate positions from grid if available, otherwise use fallback
   const homePositions = homeTeam.startXI.map((player, index) => {
-    if (player.position) return player.position
+    if (player.player?.grid) {
+      return gridToPercentage(player.player.grid, true)
+    }
+    if (player.position) {
+      return player.position
+    }
     const allPositions = generatePositionsFromFormation(homeTeam.formation, true)
     return allPositions[index] || { x: 50, y: 50 }
   })
 
   const awayPositions = awayTeam.startXI.map((player, index) => {
-    if (player.position) return player.position
+    if (player.player?.grid) {
+      return gridToPercentage(player.player.grid, false)
+    }
+    if (player.position) {
+      return player.position
+    }
     const allPositions = generatePositionsFromFormation(awayTeam.formation, false)
     return allPositions[index] || { x: 50, y: 50 }
   })

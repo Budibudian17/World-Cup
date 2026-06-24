@@ -9,6 +9,7 @@ import { PlayerCard } from '@/components/player-card'
 import { SectionTag } from '@/components/section-tag'
 import { AnimatedNumber } from '@/components/animated-number'
 import { WorldGlobe } from '@/components/world-globe'
+import { LiveMatchPopup } from '@/components/live-match-popup'
 import { liveMatches, tournamentStats, teams } from '@/lib/data'
 import topPlayersData from '@/lib/data/wc2026-players.json'
 import { getPlayerPhoto } from '@/lib/player-photos'
@@ -61,56 +62,66 @@ export default function HomePage() {
               if (!aIsLive && bIsLive) return 1
               return new Date(a.local_date).getTime() - new Date(b.local_date).getTime()
             })
-            .slice(0, 6)
-            .map((match: any) => {
-              const isLive = match.time_elapsed !== 'notstarted' && match.finished === 'FALSE'
-              
-              // ngubah format tanggal jadi biar seperti biasa
-              const [datePart, timePart] = match.local_date.split(' ')
-              const [month, day, year] = datePart.split('/')
-              const [hours, minutes] = timePart.split(':')
-              
-              // Create Date object (asumsi UTC dari API)
-              const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
-              
-              // Diubah otomatis ke daerah manapun user berada
-              const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-              const formattedDate = matchDate.toLocaleDateString('en-CA', { timeZone: userTimezone })
-              const formattedTime = matchDate.toLocaleTimeString('en-US', { 
-                timeZone: userTimezone,
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: false 
-              })
-              
-              return {
-                id: match.id,
-                teamA: { 
-                  name: match.home_team_name_en, 
-                  code: match.home_team_name_en?.substring(0, 3).toUpperCase() || 'TBA', 
-                  flag: '🏳️', 
-                  group: match.group || '' 
-                },
-                teamB: { 
-                  name: match.away_team_name_en, 
-                  code: match.away_team_name_en?.substring(0, 3).toUpperCase() || 'TBA', 
-                  flag: '🏳️', 
-                  group: match.group || '' 
-                },
-                scoreA: match.home_score ? parseInt(match.home_score) : null,
-                scoreB: match.away_score ? parseInt(match.away_score) : null,
-                venue: stadiumMap[match.stadium_id] || 'TBA',
-                date: formattedDate,
-                time: formattedTime,
-                isLive: isLive,
-                minute: isLive && match.time_elapsed !== 'notstarted' ? parseInt(match.time_elapsed) : 0,
-                finished: match.finished,
-                flagUrlA: flagMap[match.home_team_name_en] || null,
-                flagUrlB: flagMap[match.away_team_name_en] || null,
-              }
+
+          // Separate live and upcoming matches
+          const liveMatches = transformedMatches.filter((m: any) => m.time_elapsed !== 'notstarted' && m.finished === 'FALSE')
+          const upcomingMatches = transformedMatches.filter((m: any) => m.time_elapsed === 'notstarted' && m.finished === 'FALSE')
+
+          // Take 1 live match (if any) + 6 upcoming matches
+          const selectedMatches = [
+            ...liveMatches.slice(0, 1),
+            ...upcomingMatches.slice(0, 6)
+          ]
+
+          const finalMatches = selectedMatches.map((match: any) => {
+            const isLive = match.time_elapsed !== 'notstarted' && match.finished === 'FALSE'
+
+            // ngubah format tanggal jadi biar seperti biasa
+            const [datePart, timePart] = match.local_date.split(' ')
+            const [month, day, year] = datePart.split('/')
+            const [hours, minutes] = timePart.split(':')
+
+            // Create Date object (asumsi UTC dari API)
+            const matchDate = new Date(`${year}-${month}-${day}T${hours}:${minutes}:00Z`)
+
+            // Diubah otomatis ke daerah manapun user berada
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+            const formattedDate = matchDate.toLocaleDateString('en-CA', { timeZone: userTimezone })
+            const formattedTime = matchDate.toLocaleTimeString('en-US', {
+              timeZone: userTimezone,
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false
             })
-          
-          setMatches(transformedMatches)
+
+            return {
+              id: match.id,
+              teamA: {
+                name: match.home_team_name_en,
+                code: match.home_team_name_en?.substring(0, 3).toUpperCase() || 'TBA',
+                flag: '🏳️',
+                group: match.group || ''
+              },
+              teamB: {
+                name: match.away_team_name_en,
+                code: match.away_team_name_en?.substring(0, 3).toUpperCase() || 'TBA',
+                flag: '🏳️',
+                group: match.group || ''
+              },
+              scoreA: match.home_score ? parseInt(match.home_score) : null,
+              scoreB: match.away_score ? parseInt(match.away_score) : null,
+              venue: stadiumMap[match.stadium_id] || 'TBA',
+              date: formattedDate,
+              time: formattedTime,
+              isLive: isLive,
+              minute: isLive && match.time_elapsed !== 'notstarted' ? parseInt(match.time_elapsed) : 0,
+              finished: match.finished,
+              flagUrlA: flagMap[match.home_team_name_en] || null,
+              flagUrlB: flagMap[match.away_team_name_en] || null,
+            }
+          })
+
+          setMatches(finalMatches)
         }
       } catch (error) {
         console.error('Error fetching matches:', error)
@@ -352,6 +363,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Live Match Popup */}
+      <LiveMatchPopup liveMatches={matches.filter(m => m.isLive)} />
     </PageTransition>
   )
 }

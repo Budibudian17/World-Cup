@@ -313,7 +313,10 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
     // Check if match is within H-1 (1 day before match)
     const now = new Date()
     const hoursUntilMatch = (matchDate.getTime() - now.getTime()) / (1000 * 60 * 60)
-    const isWithinH1 = hoursUntilMatch <= 24 && hoursUntilMatch > -48 // Within 24 hours before or 48 hours after
+
+    // Always allow access for finished or live matches
+    // For upcoming matches, only allow access within 24 hours before
+    const isWithinH1 = matchData.finished === 'TRUE' || isLive || hoursUntilMatch <= 24
 
     return {
       id: matchData.id,
@@ -337,7 +340,7 @@ export default function MatchDetailPage({ params }: { params: Promise<{ id: stri
       isLive: isLive,
       isWithinH1: isWithinH1,
       hoursUntilMatch: hoursUntilMatch,
-      minute: isLive && matchData.time_elapsed !== 'notstarted' ? parseInt(matchData.time_elapsed) : 0,
+      minute: isLive && matchData.time_elapsed !== 'notstarted' && !isNaN(parseInt(matchData.time_elapsed)) ? parseInt(matchData.time_elapsed) : 0,
       finished: matchData.finished,
       matchday: matchData.matchday,
       flagUrlA: flagMap[matchData.home_team_name_en] || null,

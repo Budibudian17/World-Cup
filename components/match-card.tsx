@@ -75,7 +75,7 @@ export function MatchCard({ match }: MatchCardProps) {
         <div className="flex items-center gap-1.5 mb-3">
           <span className="w-2 h-2 rounded-full bg-wc-live-red animate-pulse-live" />
           <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs uppercase text-wc-live-red">
-            Live {match.minute}&apos;
+            Live {match.minute && !isNaN(match.minute) ? `${match.minute}'` : ''}
           </span>
         </div>
       )}
@@ -151,7 +151,7 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
         <div className="flex items-center gap-1.5 text-muted-foreground">
           {match.isLive ? (
-            <span className="text-xs text-wc-live-red font-bold">Live {match.minute}'</span>
+            <span className="text-xs text-wc-live-red font-bold">Live {match.minute && !isNaN(match.minute) ? `${match.minute}'` : ''}</span>
           ) : match.finished === 'TRUE' ? (
             <span className="text-xs">Finished</span>
           ) : (

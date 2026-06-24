@@ -67,10 +67,12 @@ export default function HomePage() {
           const liveMatches = transformedMatches.filter((m: any) => m.time_elapsed !== 'notstarted' && m.finished === 'FALSE')
           const upcomingMatches = transformedMatches.filter((m: any) => m.time_elapsed === 'notstarted' && m.finished === 'FALSE')
 
-          // Take 1 live match (if any) + 6 upcoming matches
+          // Take total 6 matches (including live matches)
+          const liveCount = Math.min(liveMatches.length, 1) // Max 1 live match
+          const upcomingCount = 6 - liveCount
           const selectedMatches = [
-            ...liveMatches.slice(0, 1),
-            ...upcomingMatches.slice(0, 6)
+            ...liveMatches.slice(0, liveCount),
+            ...upcomingMatches.slice(0, upcomingCount)
           ]
 
           const finalMatches = selectedMatches.map((match: any) => {
@@ -114,7 +116,7 @@ export default function HomePage() {
               date: formattedDate,
               time: formattedTime,
               isLive: isLive,
-              minute: isLive && match.time_elapsed !== 'notstarted' ? parseInt(match.time_elapsed) : 0,
+              minute: isLive && match.time_elapsed !== 'notstarted' && !isNaN(parseInt(match.time_elapsed)) ? parseInt(match.time_elapsed) : 0,
               finished: match.finished,
               flagUrlA: flagMap[match.home_team_name_en] || null,
               flagUrlB: flagMap[match.away_team_name_en] || null,

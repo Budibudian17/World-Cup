@@ -132,14 +132,20 @@ export async function GET(request: Request) {
       try {
         const data = await getFixtureLineups(apiFootballFixtureId.toString())
 
+        console.log('API-Football lineup response:', JSON.stringify(data, null, 2))
+
         // Check if API returned valid lineup data
         if (data && data.response && data.response.length > 0) {
           console.log('Successfully fetched lineups from API-Football')
           return NextResponse.json(data)
+        } else {
+          console.log('API-Football returned empty lineup data')
         }
       } catch (lineupError) {
         console.error('Error fetching lineups from API-Football:', lineupError)
       }
+    } else {
+      console.log('No API-Football fixture ID found for:', homeTeamName, 'vs', awayTeamName, 'on', matchDate)
     }
 
     // Fallback to TBA data

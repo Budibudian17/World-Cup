@@ -34,7 +34,7 @@ export function LiveMatchPopup({ liveMatches }: LiveMatchPopupProps) {
   const currentMatch = liveMatches[currentMatchIndex]
 
   return (
-    <div className="fixed right-4 bottom-4 z-50 max-w-sm">
+    <div className="fixed right-4 top-1/2 -translate-y-1/2 z-50 max-w-sm">
       <div className="bg-gradient-to-r from-wc-live-red/20 to-wc-live-red/10 border-2 border-wc-live-red/50 rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between bg-wc-live-red/20 px-4 py-2">
@@ -56,6 +56,13 @@ export function LiveMatchPopup({ liveMatches }: LiveMatchPopupProps) {
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
+              {currentMatch.flagUrlA && (
+                <img
+                  src={currentMatch.flagUrlA}
+                  alt={currentMatch.teamA.name}
+                  className="w-6 h-4 object-cover rounded"
+                />
+              )}
               <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-sm text-foreground">
                 {currentMatch.teamA.name}
               </span>
@@ -71,12 +78,19 @@ export function LiveMatchPopup({ liveMatches }: LiveMatchPopupProps) {
               <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-sm text-foreground">
                 {currentMatch.teamB.name}
               </span>
+              {currentMatch.flagUrlB && (
+                <img
+                  src={currentMatch.flagUrlB}
+                  alt={currentMatch.teamB.name}
+                  className="w-6 h-4 object-cover rounded"
+                />
+              )}
             </div>
           </div>
 
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span className="font-bold text-wc-live-red">
-              {currentMatch.minute}&apos;
+              {currentMatch.minute && !isNaN(currentMatch.minute) ? `${currentMatch.minute}'` : ''}
             </span>
             <span>{currentMatch.venue}</span>
           </div>

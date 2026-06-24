@@ -42,7 +42,52 @@ interface LineupFieldProps {
   awayTeamName?: string
 }
 
+// Generate positions based on formation string
+function generatePositionsFromFormation(formation: string, isHome: boolean) {
+  const positions: Array<{ x: number; y: number }> = []
+
+  // Parse formation (e.g., "4-3-3" -> [4, 3, 3])
+  const formationParts = formation.split('-').map(Number)
+
+  // Goalkeeper (always at center of goal line)
+  if (isHome) {
+    positions.push({ x: 5, y: 50 }) // Home GK at left
+  } else {
+    positions.push({ x: 95, y: 50 }) // Away GK at right
+  }
+
+  // Generate positions for each line
+  let currentY = 20
+  const yStep = 80 / (formationParts.length + 1)
+
+  formationParts.forEach((count, lineIndex) => {
+    const lineY = 20 + (lineIndex + 1) * yStep
+    const xStep = isHome ? 40 / (count + 1) : 40 / (count + 1)
+    const startX = isHome ? 10 : 50
+
+    for (let i = 0; i < count; i++) {
+      const x = startX + (i + 1) * xStep
+      positions.push({ x, y: lineY })
+    }
+  })
+
+  return positions
+}
+
 export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, homeFlagUrl, awayFlagUrl, homeTeamName, awayTeamName }: LineupFieldProps) {
+  // Generate positions if not provided
+  const homePositions = homeTeam.startXI.map((player, index) => {
+    if (player.position) return player.position
+    const allPositions = generatePositionsFromFormation(homeTeam.formation, true)
+    return allPositions[index] || { x: 50, y: 50 }
+  })
+
+  const awayPositions = awayTeam.startXI.map((player, index) => {
+    if (player.position) return player.position
+    const allPositions = generatePositionsFromFormation(awayTeam.formation, false)
+    return allPositions[index] || { x: 50, y: 50 }
+  })
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">
       {/* Team flags above field */}
@@ -109,9 +154,8 @@ export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, ho
         {/* Players on field - teams facing each other horizontally (home left, away right) */}
         <div className="relative h-[400px]">
           {/* Home team players (left half, facing right) */}
-          {homeTeam.startXI.map((lineupPlayer) => {
-            const position = lineupPlayer.position || { x: 50, y: 50 }
-            // Use positions directly (already set for horizontal field in API)
+          {homeTeam.startXI.map((lineupPlayer, index) => {
+            const position = homePositions[index] || { x: 50, y: 50 }
             return (
               <div
                 key={lineupPlayer.player.id}
@@ -153,9 +197,8 @@ export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, ho
           })}
 
           {/* Away team players (right half, facing left) */}
-          {awayTeam.startXI.map((lineupPlayer) => {
-            const position = lineupPlayer.position || { x: 50, y: 50 }
-            // Use positions directly (already set for horizontal field in API)
+          {awayTeam.startXI.map((lineupPlayer, index) => {
+            const position = awayPositions[index] || { x: 50, y: 50 }
             return (
               <div
                 key={lineupPlayer.player.id}

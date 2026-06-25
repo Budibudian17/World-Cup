@@ -54,29 +54,27 @@ function gridToPercentage(grid: string, isHome: boolean): { x: number; y: number
   const { row, col } = parseGridPosition(grid)
 
   // Grid system: row = depth (1=GK, higher=forwards), col = width (1=left, higher=right)
-  // Assuming max grid is 5x5 based on typical formations
+  // Based on API data, max row is 5, max col is 4
 
   const maxRow = 5
-  const maxCol = 5
+  const maxCol = 4
 
   // Convert to percentage (0-100)
   // For horizontal field:
-  // col (width) maps to y (top to bottom) - spread players vertically
-  // row (depth) maps to x (left to right) - GK to forwards
+  // row (depth) maps to y (top to bottom) - spread players vertically
+  // col (width) maps to x (left to right) - spread players horizontally
   const depthPercent = ((row - 1) / (maxRow - 1)) * 100
   const widthPercent = ((col - 1) / (maxCol - 1)) * 100
 
   if (isHome) {
-    // Home team on left half: GK at left edge (x=2.5%), forwards at center (x=47.5%)
-    // Spread players across full height (y)
-    const x = depthPercent * 0.45 + 2.5
-    const y = widthPercent * 0.8 + 10
+    // Home team on left half: spread vertically (y) and horizontally (x)
+    const x = widthPercent * 0.4 + 2.5
+    const y = depthPercent * 0.8 + 10
     return { x, y }
   } else {
-    // Away team on right half: GK at right edge (x=97.5%), forwards at center (x=52.5%)
-    // Spread players across full height (y)
-    const x = 100 - (depthPercent * 0.45 + 2.5)
-    const y = widthPercent * 0.8 + 10
+    // Away team on right half: spread vertically (y) and horizontally (x)
+    const x = widthPercent * 0.4 + 52.5
+    const y = depthPercent * 0.8 + 10
     return { x, y }
   }
 }
@@ -88,25 +86,24 @@ function generatePositionsFromFormation(formation: string, isHome: boolean) {
   // Parse formation (e.g., "4-3-3" -> [4, 3, 3])
   const formationParts = formation.split('-').map(Number)
 
-  // Goalkeeper (always at center of goal line)
+  // Goalkeeper (at goal line edge)
   if (isHome) {
-    positions.push({ x: 5, y: 50 }) // Home GK at left
+    positions.push({ x: 5, y: 58 }) // Home GK at left edge
   } else {
-    positions.push({ x: 95, y: 50 }) // Away GK at right
+    positions.push({ x: 95, y: 57 }) // Away GK at right edge
   }
 
-  // Generate positions for each line
-  let currentY = 20
-  const yStep = 80 / (formationParts.length + 1)
+  // Generate positions for each line (horizontal field layout)
+  // x = depth (GK to forwards), y = width (spread across field)
+  const xStep = 40 / (formationParts.length + 1)
 
   formationParts.forEach((count, lineIndex) => {
-    const lineY = 20 + (lineIndex + 1) * yStep
-    const xStep = isHome ? 40 / (count + 1) : 40 / (count + 1)
-    const startX = isHome ? 10 : 50
+    const lineX = isHome ? 10 + (lineIndex + 1) * xStep : 90 - (lineIndex + 1) * xStep
+    const yStep = 80 / (count + 1)
 
     for (let i = 0; i < count; i++) {
-      const x = startX + (i + 1) * xStep
-      positions.push({ x, y: lineY })
+      const y = 18 + (i + 1) * yStep
+      positions.push({ x: lineX, y })
     }
   })
 
@@ -114,28 +111,9 @@ function generatePositionsFromFormation(formation: string, isHome: boolean) {
 }
 
 export function LineupField({ homeTeam, awayTeam, betweenFieldAndSubstitutes, homeFlagUrl, awayFlagUrl, homeTeamName, awayTeamName }: LineupFieldProps) {
-  // Generate positions from grid if available, otherwise use fallback
-  const homePositions = homeTeam.startXI.map((player, index) => {
-    if (player.player?.grid) {
-      return gridToPercentage(player.player.grid, true)
-    }
-    if (player.position) {
-      return player.position
-    }
-    const allPositions = generatePositionsFromFormation(homeTeam.formation, true)
-    return allPositions[index] || { x: 50, y: 50 }
-  })
-
-  const awayPositions = awayTeam.startXI.map((player, index) => {
-    if (player.player?.grid) {
-      return gridToPercentage(player.player.grid, false)
-    }
-    if (player.position) {
-      return player.position
-    }
-    const allPositions = generatePositionsFromFormation(awayTeam.formation, false)
-    return allPositions[index] || { x: 50, y: 50 }
-  })
+  // Use formation-based positions for better layout
+  const homePositions = generatePositionsFromFormation(homeTeam.formation, true)
+  const awayPositions = generatePositionsFromFormation(awayTeam.formation, false)
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6">

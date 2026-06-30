@@ -6,20 +6,22 @@ import { SectionTag } from '@/components/section-tag'
 import { cn } from '@/lib/utils'
 import { Trophy } from 'lucide-react'
 
-const ROUNDS = ['round_of_16', 'quarter_final', 'semi_final', 'final'] as const
+const ROUNDS = ['r32', 'r16', 'qf', 'sf', 'final'] as const
 type Round = typeof ROUNDS[number]
 
 const ROUND_LABELS: Record<Round, string> = {
-  round_of_16: 'Round of 16',
-  quarter_final: 'Quarter-Finals',
-  semi_final: 'Semi-Finals',
+  r32: 'Round of 32',
+  r16: 'Round of 16',
+  qf: 'Quarter-Finals',
+  sf: 'Semi-Finals',
   final: 'Final',
 }
 
 const MATCHES_PER_ROUND: Record<Round, number> = {
-  round_of_16: 8,
-  quarter_final: 4,
-  semi_final: 2,
+  r32: 16,
+  r16: 8,
+  qf: 4,
+  sf: 2,
   final: 1,
 }
 
@@ -39,6 +41,18 @@ interface BracketGame {
 }
 
 export default function BracketPage() {
+  // Fetch teams for flag URLs
+  const { data: teamsData } = useQuery({
+    queryKey: ['teams'],
+    queryFn: async () => {
+      const response = await fetch('/api/teams')
+      if (!response.ok) throw new Error('Failed to fetch teams')
+      const data = await response.json()
+      return data.teams
+    },
+    staleTime: 24 * 60 * 60 * 1000,
+  })
+
   // Fetch bracket games with React Query for caching
   const { data: gamesData, isLoading: loading } = useQuery({
     queryKey: ['bracket-games'],
@@ -95,6 +109,17 @@ export default function BracketPage() {
 
   const games = gamesData || []
 
+  // Create flag map from teams data
+  const flagMap: Record<string, string> = {}
+  if (teamsData) {
+    teamsData.forEach((team: any) => {
+      const flagUrl = typeof team.flag === 'string' ? team.flag : team.flag?.flagUrl
+      if (flagUrl && team.name_en) {
+        flagMap[team.name_en] = flagUrl
+      }
+    })
+  }
+
   if (loading) {
     return (
       <PageTransition>
@@ -147,6 +172,7 @@ export default function BracketPage() {
                   key={round}
                   round={round}
                   games={games.filter((g: BracketGame) => g.type === round)}
+                  flagMap={flagMap}
                 />
               ))}
 
@@ -168,12 +194,14 @@ export default function BracketPage() {
   )
 }
 
-function RoundColumn({ 
-  round, 
-  games 
-}: { 
+function RoundColumn({
+  round,
+  games,
+  flagMap
+}: {
   round: Round
   games: BracketGame[]
+  flagMap: Record<string, string>
 }) {
   const sortedGames = games.sort((a, b) => a.id.localeCompare(b.id))
 
@@ -182,22 +210,22 @@ function RoundColumn({
       <span className="font-[family-name:var(--font-barlow-condensed)] font-bold text-xs uppercase tracking-widest text-wc-gold mb-4 text-center whitespace-nowrap">
         {ROUND_LABELS[round]}
       </span>
-      <div 
+      <div
         className="flex flex-col gap-4 justify-around flex-1"
-        style={{ 
-          paddingTop: round === 'quarter_final' ? '24px' : round === 'semi_final' ? '56px' : round === 'final' ? '120px' : '0',
-          paddingBottom: round === 'quarter_final' ? '24px' : round === 'semi_final' ? '56px' : round === 'final' ? '120px' : '0'
+        style={{
+          paddingTop: round === 'qf' ? '24px' : round === 'sf' ? '56px' : round === 'final' ? '120px' : '0',
+          paddingBottom: round === 'qf' ? '24px' : round === 'sf' ? '56px' : round === 'final' ? '120px' : '0'
         }}
       >
         {sortedGames.map((game) => (
-          <BracketMatchCard key={game.id} game={game} />
+          <BracketMatchCard key={game.id} game={game} flagMap={flagMap} />
         ))}
       </div>
     </div>
   )
 }
 
-function BracketMatchCard({ game }: { game: BracketGame }) {
+function BracketMatchCard({ game, flagMap }: { game: BracketGame; flagMap: Record<string, string> }) {
   const isFinished = game.finished === 'TRUE'
   const formatDate = (dateStr: string) => {
     const [date, time] = dateStr.split(' ')
@@ -208,6 +236,8 @@ function BracketMatchCard({ game }: { game: BracketGame }) {
   const awayTeam = game.away_team_name_en || 'TBA'
   const homeScore = isFinished && game.home_score !== null ? game.home_score : null
   const awayScore = isFinished && game.away_score !== null ? game.away_score : null
+  const homeFlag = flagMap[homeTeam] || null
+  const awayFlag = flagMap[awayTeam] || null
 
   return (
     <div className="bg-card border border-wc-gold/30 rounded-lg overflow-hidden">
@@ -215,12 +245,14 @@ function BracketMatchCard({ game }: { game: BracketGame }) {
         teamName={homeTeam}
         score={homeScore}
         isWinner={false}
+        flagUrl={homeFlag}
       />
       <div className="h-px bg-wc-gold/20" />
       <TeamSlot
         teamName={awayTeam}
         score={awayScore}
         isWinner={false}
+        flagUrl={awayFlag}
       />
       <div className="px-3 py-1.5 bg-secondary/30">
         <p className="font-sans text-[10px] text-muted-foreground text-center">
@@ -235,22 +267,33 @@ function TeamSlot({
   teamName,
   score,
   isWinner,
+  flagUrl,
 }: {
   teamName: string
   score: number | null
   isWinner: boolean
+  flagUrl: string | null
 }) {
   return (
-    <div className="w-full px-3 py-2 flex items-center justify-between">
-      <span className={cn(
-        'font-[family-name:var(--font-barlow-condensed)] font-bold text-xs uppercase tracking-wide truncate',
-        isWinner && 'text-wc-gold',
-        !isWinner && 'text-foreground'
-      )}>
-        {teamName}
-      </span>
+    <div className="w-full px-3 py-2 flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {flagUrl && (
+          <img
+            src={flagUrl}
+            alt={teamName}
+            className="w-5 h-5 object-cover rounded-sm flex-shrink-0"
+          />
+        )}
+        <span className={cn(
+          'font-[family-name:var(--font-barlow-condensed)] font-bold text-xs uppercase tracking-wide truncate',
+          isWinner && 'text-wc-gold',
+          !isWinner && 'text-foreground'
+        )}>
+          {teamName}
+        </span>
+      </div>
       {score !== null && (
-        <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-sm text-wc-gold ml-2">
+        <span className="font-[family-name:var(--font-barlow-condensed)] font-black text-sm text-wc-gold flex-shrink-0">
           {score}
         </span>
       )}

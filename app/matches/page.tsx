@@ -98,27 +98,49 @@ export default function MatchesPage() {
           const grouped: Record<string, Match[]> = {}
           transformedMatches.forEach((match: any) => {
             let groupKey: string
-            
+
             if (match.type === 'group') {
               groupKey = `Matchday ${match.matchday}`
             } else {
               // Knockout stages - map to round names
               const roundMap: Record<string, string> = {
-                'round_of_16': 'Round of 16',
-                'quarter_final': 'Quarter-Finals',
-                'semi_final': 'Semi-Finals',
-                'final': 'Final'
+                'r32': 'Round of 32',
+                'r16': 'Round of 16',
+                'qf': 'Quarter-Finals',
+                'sf': 'Semi-Finals',
+                'final': 'Final',
+                'third': 'Third Place Match'
               }
               groupKey = roundMap[match.type] || match.type
             }
-            
+
             if (!grouped[groupKey]) {
               grouped[groupKey] = []
             }
             grouped[groupKey].push(match)
           })
 
-          setGroupedMatches(grouped)
+          // Define custom order for stages
+          const stageOrder = [
+            'Matchday 1', 'Matchday 2', 'Matchday 3',
+            'Round of 32', 'Round of 16', 'Quarter-Finals', 'Semi-Finals', 'Third Place Match', 'Final'
+          ]
+
+          // Sort grouped matches by custom order
+          const sortedGrouped: Record<string, Match[]> = {}
+          stageOrder.forEach(key => {
+            if (grouped[key]) {
+              sortedGrouped[key] = grouped[key]
+            }
+          })
+          // Add any remaining groups that weren't in the predefined order
+          Object.keys(grouped).forEach(key => {
+            if (!sortedGrouped[key]) {
+              sortedGrouped[key] = grouped[key]
+            }
+          })
+
+          setGroupedMatches(sortedGrouped)
         }
       } catch (error) {
         console.error('Error fetching matches:', error)
@@ -159,9 +181,7 @@ export default function MatchesPage() {
               </div>
             ) : (
               <div className="space-y-12">
-                {Object.entries(groupedMatches)
-                  .sort(([a], [b]) => parseInt(a) - parseInt(b))
-                  .map(([matchday, matches]) => (
+                {Object.entries(groupedMatches).map(([matchday, matches]) => (
                     <div key={matchday}>
                       <div className="flex items-center gap-4 mb-6">
                         <div className="h-px flex-1 bg-border" />
